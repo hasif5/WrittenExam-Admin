@@ -7,6 +7,7 @@ import "@mantine/dates/styles.css";
 import "@mantine/tiptap/styles.css";
 import "mantine-react-table/styles.css";
 import "katex/dist/katex.min.css";
+import "@/app/global.css";
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

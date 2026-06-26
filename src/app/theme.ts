@@ -45,6 +45,13 @@ export const theme = createTheme({
     fontWeight: "650",
   },
   components: {
+    AppShell: {
+      styles: {
+        // Recessed app surface (set in global.css) so bordered cards lift off it
+        // consistently in both schemes, instead of each page picking a background.
+        main: { backgroundColor: "var(--app-shell-bg)" },
+      },
+    },
     Card: {
       defaultProps: {
         withBorder: true,
@@ -65,8 +72,12 @@ export const theme = createTheme({
     },
     NavLink: {
       defaultProps: {
-        // Neutral grey active/hover (Cursor-style) instead of an indigo tint.
+        // Neutral grey hover (Cursor-style); active items opt into the brand tint.
         color: "gray",
+      },
+      styles: {
+        // Rounded "pill" rows for a modern sidebar, applied app-wide.
+        root: { borderRadius: "var(--mantine-radius-md)" },
       },
     },
   },

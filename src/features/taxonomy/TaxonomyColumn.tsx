@@ -161,8 +161,10 @@ export function TaxonomyColumn({
                       py={6}
                       style={{
                         borderRadius: 8,
+                        // Theme-driven, scheme-aware brand tint (same token as
+                        // variant="light"); legible in both light and dark.
                         backgroundColor: selected
-                          ? "var(--mantine-color-indigo-0)"
+                          ? "var(--mantine-primary-color-light)"
                           : undefined,
                       }}
                     >

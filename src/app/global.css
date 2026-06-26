@@ -1,0 +1,36 @@
+/* App-wide surfaces and polish inherited by every page (no per-page overrides).
+ * File: src/app/global.css
+ * Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+ * Created: 2026-06-27
+ */
+
+/* Recessed shell background so bordered cards read as elevated in both schemes.
+ * Consumed by the AppShell theme override (components.AppShell.styles.main).
+ * :root carries safe defaults; the scheme blocks below refine per mode so the
+ * surface is always defined and legible in light and dark. */
+:root {
+  --app-shell-bg: var(--mantine-color-body);
+  --app-scrollbar-thumb: var(--mantine-color-gray-5);
+}
+
+[data-mantine-color-scheme="light"] {
+  --app-shell-bg: var(--mantine-color-gray-0);
+  --app-scrollbar-thumb: var(--mantine-color-gray-4);
+}
+
+[data-mantine-color-scheme="dark"] {
+  --app-shell-bg: var(--mantine-color-dark-8);
+  --app-scrollbar-thumb: var(--mantine-color-dark-3);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thin, scheme-aware scrollbars (sidebar + content). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-scrollbar-thumb) transparent;
+}

@@ -1,82 +1,80 @@
-// Sidebar navigation. Active Phase 1 surfaces are links; later phases are shown
-// disabled for navigation context (no data screens, no invented endpoints).
+// Sidebar navigation. Renders grouped, labelled sections from the shared nav
+// model with route-driven active states; later phases are shown disabled with
+// their phase inline. Scrolling/padding is owned by the AppShell.Navbar section.
 // Author: Hasif Ahmed (www.hasif.info)
 
-import { NavLink, ScrollArea, Stack, Text, Tooltip } from "@mantine/core";
-import {
-  IconBook2,
-  IconCategory2,
-  IconClipboardList,
-  IconGauge,
-  IconTrash,
-  IconUsers,
-  IconUserCheck,
-  IconBuildingStore,
-  IconWallet,
-  IconReportAnalytics,
-  type Icon,
-} from "@tabler/icons-react";
-import { NavLink as RouterNavLink } from "react-router-dom";
+import type { ReactNode } from "react";
+import { Badge, Divider, NavLink, Stack, Text } from "@mantine/core";
+import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
+import { useDeletionQueue } from "@/api/queries/users";
+import { FUTURE_NAV, NAV_SECTIONS, isNavItemActive, type NavItem } from "./navigation";
 
-interface NavItem {
-  label: string;
-  to: string;
-  icon: Icon;
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <Text size="xs" fw={600} c="dimmed" tt="uppercase" px="xs" mb={6} style={{ letterSpacing: 0.4 }}>
+      {children}
+    </Text>
+  );
 }
-
-const PRIMARY: NavItem[] = [
-  { label: "Dashboard", to: "/", icon: IconGauge },
-  { label: "Users & Roles", to: "/users", icon: IconUsers },
-  { label: "Deletion Queue", to: "/users/deletion-queue", icon: IconTrash },
-  { label: "Examiner Applications", to: "/examiner-applications", icon: IconClipboardList },
-  { label: "Examiner Roster", to: "/examiners", icon: IconUserCheck },
-  { label: "Taxonomy", to: "/taxonomy", icon: IconCategory2 },
-  { label: "Question Bank", to: "/questions", icon: IconBook2 },
-];
-
-interface FutureItem {
-  label: string;
-  phase: string;
-  icon: Icon;
-}
-
-const FUTURE: FutureItem[] = [
-  { label: "Courses & Quizzes", phase: "Phase 2", icon: IconBuildingStore },
-  { label: "Evaluation", phase: "Phase 3", icon: IconClipboardList },
-  { label: "Wallet & Payouts", phase: "Phase 4", icon: IconWallet },
-  { label: "Reports", phase: "Phase 6", icon: IconReportAnalytics },
-];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  return (
-    <ScrollArea h="100%" type="scroll">
-      <Stack gap={4} p="xs">
-        {PRIMARY.map((item) => (
-          <NavLink
-            key={item.to}
-            component={RouterNavLink}
-            to={item.to}
-            end={item.to === "/"}
-            label={item.label}
-            leftSection={<item.icon size={18} stroke={1.6} />}
-            onClick={onNavigate}
-          />
-        ))}
+  const { pathname } = useLocation();
+  const deletionCount = useDeletionQueue().data?.length ?? 0;
 
-        <Text size="xs" c="dimmed" fw={600} tt="uppercase" mt="md" mb={4} px="sm">
-          Coming later
-        </Text>
-        {FUTURE.map((item) => (
-          <Tooltip key={item.label} label={`Available in ${item.phase}`} position="right">
+  const badgeFor = (item: NavItem): ReactNode => {
+    if (item.badge === "deletion-queue" && deletionCount > 0) {
+      return (
+        <Badge size="sm" circle variant="filled" color="orange">
+          {deletionCount}
+        </Badge>
+      );
+    }
+    return undefined;
+  };
+
+  return (
+    <Stack gap="lg">
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.title}>
+          {section.topDivider && <Divider mb="md" />}
+          <SectionLabel>{section.title}</SectionLabel>
+          <Stack gap={2}>
+            {section.items.map((item) => {
+              const active = isNavItemActive(pathname, item.to);
+              return (
+                <NavLink
+                  key={item.to}
+                  component={RouterNavLink}
+                  to={item.to}
+                  end={item.to === "/"}
+                  label={item.label}
+                  leftSection={<item.icon size={18} stroke={1.6} />}
+                  rightSection={badgeFor(item)}
+                  active={active}
+                  color={active ? "brand" : "gray"}
+                  variant={active ? "light" : "subtle"}
+                  onClick={onNavigate}
+                />
+              );
+            })}
+          </Stack>
+        </div>
+      ))}
+
+      <div>
+        <SectionLabel>Coming later</SectionLabel>
+        <Stack gap={2}>
+          {FUTURE_NAV.map((item) => (
             <NavLink
+              key={item.label}
               label={item.label}
               description={item.phase}
               leftSection={<item.icon size={18} stroke={1.6} />}
               disabled
             />
-          </Tooltip>
-        ))}
-      </Stack>
-    </ScrollArea>
+          ))}
+        </Stack>
+      </div>
+    </Stack>
   );
 }

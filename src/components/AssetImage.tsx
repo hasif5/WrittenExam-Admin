@@ -61,9 +61,9 @@ export function AssetImage({
 
   if (!assetId) {
     return (
-      <Center h={height} bg="var(--mantine-color-gray-1)" style={{ borderRadius: 8 }}>
+      <Center h={height} bg="var(--mantine-color-default-hover)" style={{ borderRadius: 8 }}>
         <Stack align="center" gap={4}>
-          <IconPhotoOff size={28} color="var(--mantine-color-gray-5)" />
+          <IconPhotoOff size={28} color="var(--mantine-color-dimmed)" />
           <Text size="xs" c="dimmed">
             No image
           </Text>
@@ -82,8 +82,8 @@ export function AssetImage({
 
   if (error) {
     return (
-      <Center h={height} bg="var(--mantine-color-red-0)" style={{ borderRadius: 8 }}>
-        <Text size="xs" c="red">
+      <Center h={height} bg="var(--mantine-color-red-light)" style={{ borderRadius: 8 }}>
+        <Text size="xs" c="var(--mantine-color-red-light-color)">
           {error}
         </Text>
       </Center>
