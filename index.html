@@ -1,0 +1,40 @@
+<!doctype html>
+<!--
+  File: index.html
+  Admin Panel SPA HTML entry point; applies the stored Mantine colour scheme before paint.
+  Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+  Created: 2026-06-26
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Engineer's Written Evaluation Platform</title>
+    <script>
+      // Apply the stored Mantine colour scheme before paint to avoid a flash.
+      (function () {
+        try {
+          var stored = localStorage.getItem("mantine-color-scheme-value");
+          var prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          // Dark is the default; honour an explicit stored choice, resolve "auto".
+          var scheme = !stored
+            ? "dark"
+            : stored === "auto"
+              ? prefersDark
+                ? "dark"
+                : "light"
+              : stored;
+          document.documentElement.setAttribute("data-mantine-color-scheme", scheme);
+        } catch (e) {
+          /* no-op */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
