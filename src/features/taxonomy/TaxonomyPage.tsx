@@ -4,7 +4,8 @@
 
 import { useState } from "react";
 import { Grid } from "@mantine/core";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 import { confirmAction } from "@/lib/confirm";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import {
@@ -96,7 +97,8 @@ export function TaxonomyPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        image={HEROES.taxonomy}
         title="Taxonomy"
         description="Shared Section -> Subject -> Chapter hierarchy used by the Question Bank (and future courses)."
       />

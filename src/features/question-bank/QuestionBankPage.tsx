@@ -13,7 +13,8 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import type { MRT_ColumnDef } from "mantine-react-table";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 import { DataTable } from "@/components/DataTable";
 import { usePagination } from "@/lib/usePagination";
 import { useSections, useSubjects, useChapters } from "@/api/queries/taxonomy";
@@ -129,7 +130,8 @@ export function QuestionBankPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        image={HEROES.questions}
         title="Question Bank"
         description="Author questions with rich text and LaTeX. A non-empty solution is mandatory."
         actions={

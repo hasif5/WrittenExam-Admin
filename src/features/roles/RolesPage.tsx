@@ -17,7 +17,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLock, IconPencil, IconPlus } from "@tabler/icons-react";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 import { ErrorState } from "@/components/ErrorState";
 import { useRbacRoles } from "@/api/queries/rbac";
 import type { RoleDetailOut } from "@/api/types";
@@ -53,7 +54,8 @@ export function RolesPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        image={HEROES.roles}
         title="Roles & Permissions"
         description="Create staff roles and assign permission bundles. The super-admin role is locked to full access."
         actions={

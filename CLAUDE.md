@@ -43,7 +43,8 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
   `RequirePermission` (route-level permission guard), `LoginPage`.
 - `app/` - `providers.tsx`, `router.tsx`, `theme.ts` (theme registry), `appearance.ts` +
   `AppearanceProvider.tsx` (appearance state), `global.css`.
-- `components/` - shared UI (`DataTable` MRT wrapper, `PageHeader`, `ErrorState`, `AssetImage`, etc.).
+- `components/` - shared UI (`DataTable` MRT wrapper, `PageHero`, `ErrorState`, `AssetImage`, etc.).
+- `assets/heroes/` - per-page hero banners (1K Nano Banana art, optimized to webp) + `index.ts` registry.
 - `features/` - one folder per surface (`users`, `roles`, `taxonomy`, `question-bank`,
   `examiner-apps`, `examiners`, `deletion-queue`, `dashboard`).
 - `layout/` - `AppShell`, `Sidebar`, `navigation.ts` (single nav model).
@@ -76,8 +77,15 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
   slot. The switcher, persistence, and `data-app-theme` hook pick it up automatically - no other code.
 - **State + wiring:** `AppearanceProvider` owns the selected appearance, persists it to
   `localStorage` (`wep_admin_appearance`), sets `data-app-theme` on `<html>`, and renders the root
-  `MantineProvider` with `forceColorScheme`. `useAppearance()` exposes `appearance` / `setAppearance`
-  / `cycleAppearance`; `components/ThemeSwitcher` is the menu (auto-built from the registry).
+  `MantineProvider` with `forceColorScheme`. `useAppearance()` exposes `appearance` / `setAppearance`;
+  `components/ThemeSwitcher` is the menu (auto-built from the registry).
+- **Page hero standard.** Every top-level page opens with `<PageHero title description? actions? image />`
+  (replaces the old plain `PageHeader`). Heroes are one cohesive illustration per surface in **matching
+  dark + light variants** (`<name>-dark.webp` / `<name>-light.webp`), keyed via `HEROES` in
+  `assets/heroes/index.ts` as `{ dark, light }`. `PageHero` reads the active appearance's colour scheme
+  (`APP_THEMES[appearance].colorScheme`) to pick the variant and flip its left-to-right scrim + text
+  colour (navy scrim + white text in dark; white scrim + dark text in light/colorful). Add a page hero
+  by dropping both webp variants in `assets/heroes/`, adding one `HEROES` entry, and passing it.
 - **Scheme-specific surfaces** belong in `global.css`, keyed by `[data-mantine-color-scheme="..."]`
   (light/dark) and `[data-app-theme="colorful"]` (playful rainbow header accent, page wash, sidebar
   tint). Drive page chrome from CSS vars (`--app-shell-bg`, `--app-scrollbar-thumb`, `--login-form-bg`)

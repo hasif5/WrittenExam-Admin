@@ -3,7 +3,8 @@
 
 import { Badge, Button, Card, Code, Group, Loader, Center, Table, Text } from "@mantine/core";
 import { IconRestore, IconTrash } from "@tabler/icons-react";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 import { ErrorState } from "@/components/ErrorState";
 import {
   useDeletionQueue,
@@ -74,7 +75,8 @@ export function DeletionQueuePage() {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        image={HEROES.deletion}
         title="Account Deletion Queue"
         description="Soft-deleted accounts within their 30-day grace window. Restore or force an immediate purge."
       />

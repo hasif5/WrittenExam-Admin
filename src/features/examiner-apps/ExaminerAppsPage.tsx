@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import { ActionIcon, Badge, Select, Tooltip } from "@mantine/core";
 import { IconEye } from "@tabler/icons-react";
 import type { MRT_ColumnDef } from "mantine-react-table";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 import { DataTable } from "@/components/DataTable";
 import { usePagination } from "@/lib/usePagination";
 import { useExaminerApps } from "@/api/queries/examiners";
@@ -61,7 +62,8 @@ export function ExaminerAppsPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHero
+        image={HEROES.examinerApps}
         title="Examiner Applications"
         description="Review public examiner applications and approve, reject, or request changes."
         actions={

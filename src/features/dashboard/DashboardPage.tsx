@@ -2,19 +2,7 @@
 // static orientation screen pointing to the live admin surfaces.
 // Author: Hasif Ahmed (www.hasif.info)
 
-import {
-  Card,
-  Flex,
-  Grid,
-  Group,
-  Image,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-  useComputedColorScheme,
-} from "@mantine/core";
+import { Card, Grid, Group, SimpleGrid, Text, ThemeIcon } from "@mantine/core";
 import {
   IconBook2,
   IconCategory2,
@@ -25,8 +13,8 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/auth/useAuth";
-import heroDark from "@/assets/dashboard-hero-dark.webp";
-import heroLight from "@/assets/dashboard-hero-light.webp";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 
 interface Tile {
   label: string;
@@ -56,33 +44,14 @@ const TILES: Tile[] = [
 export function DashboardPage() {
   const { me } = useAuth();
   const name = me?.full_name || me?.user.email || "there";
-  const scheme = useComputedColorScheme("dark", { getInitialValueInEffect: false });
-  const hero = scheme === "dark" ? heroDark : heroLight;
 
   return (
     <>
-      <Card withBorder radius="md" padding="lg" mb="lg" style={{ overflow: "hidden" }}>
-        <Flex align="center" justify="space-between" gap="lg" wrap="nowrap">
-          <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
-            <Title order={2}>Welcome, {name}</Title>
-            <Text c="dimmed" size="sm">
-              Phase 1 admin console. Curate examiners, taxonomy, and the question bank, and keep
-              staff, roles, and applications moving — all from one place. Later domains (courses,
-              evaluation, finance, reports) arrive in upcoming phases.
-            </Text>
-          </Stack>
-          <Image
-            src={hero}
-            alt=""
-            h={150}
-            w={275}
-            fit="contain"
-            radius="md"
-            visibleFrom="sm"
-            style={{ flex: "0 0 auto" }}
-          />
-        </Flex>
-      </Card>
+      <PageHero
+        image={HEROES.dashboard}
+        title={`Welcome, ${name}`}
+        description="Phase 1 admin console. Curate examiners, taxonomy, and the question bank, and keep staff, roles, and applications moving - all from one place. Later domains (courses, evaluation, finance, reports) arrive in upcoming phases."
+      />
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {TILES.map((tile) => (

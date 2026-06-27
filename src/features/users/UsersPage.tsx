@@ -7,7 +7,8 @@ import { ActionIcon, Badge, Button, Code, Tabs, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDeviceMobile, IconPlus, IconShieldCog, IconUserCog } from "@tabler/icons-react";
 import type { MRT_ColumnDef } from "mantine-react-table";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHero } from "@/components/PageHero";
+import { HEROES } from "@/assets/heroes";
 import { DataTable } from "@/components/DataTable";
 import { usePagination } from "@/lib/usePagination";
 import { useUsers } from "@/api/queries/users";
@@ -169,7 +170,8 @@ function StaffUsersTab() {
 export function UsersPage() {
   return (
     <>
-      <PageHeader
+      <PageHero
+        image={HEROES.users}
         title="Users & Roles"
         description="Browse frontend users and manage staff accounts and their roles."
       />
