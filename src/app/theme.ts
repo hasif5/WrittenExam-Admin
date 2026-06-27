@@ -1,7 +1,14 @@
-// Brand theme tokens (light + dark aware).
+// Brand theme tokens + the app theme registry (light / dark / colorful).
+// `baseTheme` is the single inheritable root theme shared by every page; new
+// appearances slot in by adding one entry to APP_THEMES (theme + colour scheme).
 // Author: Hasif Ahmed (www.hasif.info)
 
-import { createTheme, type MantineColorsTuple } from "@mantine/core";
+import {
+  createTheme,
+  mergeThemeOverrides,
+  type MantineColorsTuple,
+  type MantineThemeOverride,
+} from "@mantine/core";
 
 // Brand indigo/violet scale used as the primary colour across both schemes.
 const brand: MantineColorsTuple = [
@@ -33,12 +40,28 @@ const dark: MantineColorsTuple = [
   "#060606",
 ];
 
-export const theme = createTheme({
+// Vivid magenta/violet scale that drives the playful "colorful" mode primary.
+const rainbow: MantineColorsTuple = [
+  "#fdf0ff",
+  "#f6ddff",
+  "#ecb8ff",
+  "#e290ff",
+  "#d96dff",
+  "#d456ff",
+  "#d147ff",
+  "#b934e3",
+  "#a52ccb",
+  "#9021b3",
+];
+
+// The single inheritable root theme. Every page renders under this via the one
+// MantineProvider; do not create per-page themes - extend here instead.
+export const baseTheme = createTheme({
   primaryColor: "brand",
   primaryShade: { light: 6, dark: 8 },
   autoContrast: true,
   defaultRadius: "md",
-  colors: { brand, dark },
+  colors: { brand, dark, rainbow },
   fontFamily:
     "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   headings: {
@@ -48,7 +71,7 @@ export const theme = createTheme({
     AppShell: {
       styles: {
         // Recessed app surface (set in global.css) so bordered cards lift off it
-        // consistently in both schemes, instead of each page picking a background.
+        // consistently in every mode, instead of each page picking a background.
         main: { backgroundColor: "var(--app-shell-bg)" },
       },
     },
@@ -82,3 +105,35 @@ export const theme = createTheme({
     },
   },
 });
+
+// Colorful mode: inherits the root theme, swaps in the vivid primary + a rainbow
+// default gradient. It rides on the light colour scheme; the playful surfaces
+// (gradient header/sidebar/background) live in global.css under data-app-theme.
+export const colorfulTheme: MantineThemeOverride = mergeThemeOverrides(
+  baseTheme,
+  createTheme({
+    primaryColor: "rainbow",
+    primaryShade: { light: 6, dark: 6 },
+    defaultGradient: { from: "grape", to: "indigo", deg: 60 },
+  }),
+);
+
+export type Appearance = "light" | "dark" | "colorful";
+
+export interface AppThemeEntry {
+  label: string;
+  theme: MantineThemeOverride;
+  // The Mantine colour scheme this appearance forces (forceColorScheme).
+  colorScheme: "light" | "dark";
+}
+
+// Theme registry: add a new appearance here and it is instantly selectable.
+export const APP_THEMES: Record<Appearance, AppThemeEntry> = {
+  light: { label: "Light", theme: baseTheme, colorScheme: "light" },
+  dark: { label: "Dark", theme: baseTheme, colorScheme: "dark" },
+  colorful: { label: "Colorful", theme: colorfulTheme, colorScheme: "light" },
+};
+
+export const APPEARANCE_ORDER: Appearance[] = ["light", "dark", "colorful"];
+
+export const DEFAULT_APPEARANCE: Appearance = "dark";

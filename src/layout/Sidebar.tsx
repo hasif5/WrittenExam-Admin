@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { Badge, Divider, NavLink, Stack, Text } from "@mantine/core";
 import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
 import { useDeletionQueue } from "@/api/queries/users";
+import { useAuth } from "@/auth/useAuth";
 import { FUTURE_NAV, NAV_SECTIONS, isNavItemActive, type NavItem } from "./navigation";
 
 function SectionLabel({ children }: { children: ReactNode }) {
@@ -19,7 +20,13 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { pathname } = useLocation();
-  const deletionCount = useDeletionQueue().data?.length ?? 0;
+  const { can } = useAuth();
+  const deletionCount = useDeletionQueue(can("deletion_queue.review")).data?.length ?? 0;
+
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => !item.permission || can(item.permission)),
+  })).filter((section) => section.items.length > 0);
 
   const badgeFor = (item: NavItem): ReactNode => {
     if (item.badge === "deletion-queue" && deletionCount > 0) {
@@ -34,7 +41,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <Stack gap="lg">
-      {NAV_SECTIONS.map((section) => (
+      {visibleSections.map((section) => (
         <div key={section.title}>
           {section.topDivider && <Divider mb="md" />}
           <SectionLabel>{section.title}</SectionLabel>

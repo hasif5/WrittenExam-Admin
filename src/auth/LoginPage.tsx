@@ -21,7 +21,7 @@ import { IconAlertCircle } from "@tabler/icons-react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import { errorMessage } from "@/lib/errors";
-import { ColorSchemeToggle } from "@/components/ColorSchemeToggle";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import loginHero from "@/assets/login-hero.webp";
 
 const loginSchema = z.object({
@@ -108,7 +108,7 @@ export function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           padding: "var(--mantine-spacing-xl)",
-          backgroundColor: "var(--mantine-color-body)",
+          backgroundColor: "var(--login-form-bg, var(--mantine-color-body))",
         }}
       >
         <Box w={400} maw="92vw">
@@ -119,7 +119,7 @@ export function LoginPage() {
                 Sign in to continue
               </Text>
             </Stack>
-            <ColorSchemeToggle />
+            <ThemeSwitcher />
           </Group>
 
           <Paper withBorder shadow="sm" p="xl" radius="md">

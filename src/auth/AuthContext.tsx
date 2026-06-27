@@ -2,7 +2,8 @@
 //
 // - On load, if a refresh token exists, silently refresh + fetch /users/me before
 //   rendering protected routes.
-// - Enforces staff-only access (admin/finance); non-staff logins are rejected.
+// - Enforces staff-only access (any staff account); non-staff logins are rejected.
+// - Exposes the operator's effective permissions + a can() helper for surface gating.
 //
 // Author: Hasif Ahmed (www.hasif.info)
 
@@ -10,7 +11,6 @@ import { createContext, useCallback, useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react";
 import { api, type Schemas } from "@/api/client";
 import { ApiError } from "@/lib/errors";
-import { STAFF_ROLES, type StaffRole } from "@/lib/constants";
 import * as session from "./session";
 
 export type Me = Schemas["MeOut"];
@@ -19,22 +19,20 @@ export interface AuthState {
   status: "loading" | "authenticated" | "anonymous";
   me: Me | null;
   roles: string[];
+  permissions: string[];
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  hasRole: (role: StaffRole) => boolean;
+  /** True when the operator holds the given permission (super-admin holds all). */
+  can: (permission: string) => boolean;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);
 
 class NotStaffError extends Error {
   constructor() {
-    super("This account is not a staff account. Admin access is restricted to admin/finance roles.");
+    super("This account is not a staff account. Admin access is restricted to staff roles.");
     this.name = "NotStaffError";
   }
-}
-
-function isStaff(roles: string[]): boolean {
-  return roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r));
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -43,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMe = useCallback(async (): Promise<Me> => {
     const data = await api.get<Me>("/users/me", { noRetry: true });
-    if (!isStaff(data.roles)) {
+    if (!data.is_staff) {
       throw new NotStaffError();
     }
     return data;
@@ -116,17 +114,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("anonymous");
   }, []);
 
-  const value = useMemo<AuthState>(
-    () => ({
+  const value = useMemo<AuthState>(() => {
+    const permissions = me?.permissions ?? [];
+    const permSet = new Set(permissions);
+    return {
       status,
       me,
       roles: me?.roles ?? [],
+      permissions,
       login,
       logout,
-      hasRole: (role: StaffRole) => (me?.roles ?? []).includes(role),
-    }),
-    [status, me, login, logout],
-  );
+      can: (permission: string) => permSet.has(permission),
+    };
+  }, [status, me, login, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

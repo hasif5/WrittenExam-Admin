@@ -1,6 +1,6 @@
-// Authenticated app shell: header + sidebar + routed content. The navbar owns
-// the brand and a footer; the header reflects the active route so the shell and
-// navigation stay in sync from one shared model.
+// Authenticated app shell: full-height sidebar (brand on top) + a header that
+// spans only the content area, with independent mobile/desktop collapse. The
+// header reflects the active route so the shell and navigation stay in sync.
 // Author: Hasif Ahmed (www.hasif.info)
 
 import {
@@ -21,7 +21,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { activeNavLabel } from "./navigation";
 import { BrandMark } from "@/components/BrandMark";
-import { ColorSchemeToggle } from "@/components/ColorSchemeToggle";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useAuth } from "@/auth/useAuth";
 import { ROLE_LABELS, type RoleCode } from "@/lib/constants";
 
@@ -30,9 +30,11 @@ function roleLabel(code: string): string {
 }
 
 const SECTION_BORDER = "1px solid var(--mantine-color-default-border)";
+const HEADER_HEIGHT = 56;
 
 export function AppShell() {
-  const [opened, { toggle, close }] = useDisclosure();
+  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const { me, roles, logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -48,14 +50,26 @@ export function AppShell() {
 
   return (
     <MantineAppShell
-      header={{ height: 56 }}
-      navbar={{ width: 264, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      layout="alt"
+      header={{ height: HEADER_HEIGHT }}
+      navbar={{
+        width: 264,
+        breakpoint: "sm",
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
+      }}
       padding="lg"
     >
       <MantineAppShell.Header>
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
+            <Burger
+              opened={desktopOpened}
+              onClick={toggleDesktop}
+              visibleFrom="sm"
+              size="sm"
+              aria-label="Toggle sidebar"
+            />
             <Box hiddenFrom="sm">
               <BrandMark />
             </Box>
@@ -65,7 +79,7 @@ export function AppShell() {
           </Group>
 
           <Group gap="xs" wrap="nowrap">
-            <ColorSchemeToggle />
+            <ThemeSwitcher />
             <Menu shadow="md" width={220} position="bottom-end">
               <Menu.Target>
                 <UnstyledButton>
@@ -106,11 +120,29 @@ export function AppShell() {
       </MantineAppShell.Header>
 
       <MantineAppShell.Navbar>
-        <MantineAppShell.Section px="md" py="sm" style={{ borderBottom: SECTION_BORDER }}>
+        <MantineAppShell.Section
+          h={HEADER_HEIGHT}
+          px="md"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: SECTION_BORDER,
+          }}
+        >
           <BrandMark />
+          {/* Mobile-only close control: when open the navbar is full-screen and
+              covers the header burger, so the only way out lives in here. */}
+          <Burger
+            opened={mobileOpened}
+            onClick={closeMobile}
+            hiddenFrom="sm"
+            size="sm"
+            aria-label="Close sidebar"
+          />
         </MantineAppShell.Section>
         <MantineAppShell.Section grow component={ScrollArea} type="scroll" px="sm" py="md">
-          <Sidebar onNavigate={close} />
+          <Sidebar onNavigate={closeMobile} />
         </MantineAppShell.Section>
         <MantineAppShell.Section px="md" py="sm" style={{ borderTop: SECTION_BORDER }}>
           <Group justify="space-between" wrap="nowrap">

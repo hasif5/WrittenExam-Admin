@@ -301,7 +301,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get User Roles */
+        get: operations["get_user_roles_api_v1_admin_users__user_id__roles_get"];
         put?: never;
         /** Assign Role */
         post: operations["assign_role_api_v1_admin_users__user_id__roles_post"];
@@ -373,6 +374,75 @@ export interface paths {
         put?: never;
         /** Hard Delete Account */
         post: operations["hard_delete_account_api_v1_admin_users_deletion_queue__request_id__hard_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/rbac/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Roles */
+        get: operations["list_roles_api_v1_admin_rbac_roles_get"];
+        put?: never;
+        /** Create Role */
+        post: operations["create_role_api_v1_admin_rbac_roles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/rbac/roles/{role_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Role */
+        patch: operations["update_role_api_v1_admin_rbac_roles__role_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/rbac/roles/{role_id}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Role Permissions */
+        put: operations["set_role_permissions_api_v1_admin_rbac_roles__role_id__permissions_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/rbac/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Permissions */
+        get: operations["list_permissions_api_v1_admin_rbac_permissions_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1034,6 +1104,13 @@ export interface components {
             user: components["schemas"]["UserOut"];
             /** Roles */
             roles: string[];
+            /** Permissions */
+            permissions?: string[];
+            /**
+             * Is Staff
+             * @default false
+             */
+            is_staff: boolean;
             /** Full Name */
             full_name?: string | null;
         };
@@ -1122,6 +1199,24 @@ export interface components {
             token: string;
             /** Password */
             password: string;
+        };
+        /** PermissionOut */
+        PermissionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Group */
+            group: string;
+            /** Is Active */
+            is_active: boolean;
         };
         /** QuestionAssetIn */
         QuestionAssetIn: {
@@ -1274,6 +1369,77 @@ export interface components {
             /** Role Code */
             role_code: string;
         };
+        /** RoleCreateRequest */
+        RoleCreateRequest: {
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Code */
+            code?: string | null;
+            /** Permission Codes */
+            permission_codes?: string[];
+        };
+        /** RoleDetailOut */
+        RoleDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Is System */
+            is_system: boolean;
+            /** Is Staff Template */
+            is_staff_template: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Full Access */
+            is_full_access: boolean;
+            /** Permissions */
+            permissions?: string[];
+        };
+        /** RoleOut */
+        RoleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Is System */
+            is_system: boolean;
+            /** Is Staff Template */
+            is_staff_template: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Full Access */
+            is_full_access: boolean;
+        };
+        /** RolePermissionsUpdateRequest */
+        RolePermissionsUpdateRequest: {
+            /** Permission Codes */
+            permission_codes?: string[];
+        };
+        /** RoleUpdateRequest */
+        RoleUpdateRequest: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+        };
         /** SectionCreate */
         SectionCreate: {
             /** Code */
@@ -1320,8 +1486,13 @@ export interface components {
             email: string;
             /** Display Name */
             display_name: string;
-            /** Staff Type */
+            /**
+             * Staff Type
+             * @default staff
+             */
             staff_type: string;
+            /** Role Codes */
+            role_codes?: string[];
             /** Password */
             password?: string | null;
         };
@@ -2012,6 +2183,37 @@ export interface operations {
             };
         };
     };
+    get_user_roles_api_v1_admin_users__user_id__roles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     assign_role_api_v1_admin_users__user_id__roles_post: {
         parameters: {
             query?: never;
@@ -2157,6 +2359,149 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_roles_api_v1_admin_rbac_roles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailOut"][];
+                };
+            };
+        };
+    };
+    create_role_api_v1_admin_rbac_roles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_role_api_v1_admin_rbac_roles__role_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_role_permissions_api_v1_admin_rbac_roles__role_id__permissions_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolePermissionsUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_permissions_api_v1_admin_rbac_permissions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionOut"][];
                 };
             };
         };

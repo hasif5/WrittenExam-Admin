@@ -1,16 +1,27 @@
-// Assign/revoke a role for a user. The Phase 1 list endpoint does not return a
-// user's current roles, so this offers explicit assign and revoke actions by role
-// code rather than a (misleading) toggle of unknown state.
+// Manage a user's staff roles. Lists the user's current roles (API-backed) and
+// assigns/revokes only staff roles + custom staff templates (never student/
+// examiner/pool, which are a web-frontend concern).
 // Author: Hasif Ahmed (www.hasif.info)
 
-import { useState } from "react";
-import { Button, Group, Modal, Select, Stack, Text } from "@mantine/core";
+import { useMemo, useState } from "react";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Group,
+  Loader,
+  Modal,
+  Select,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAssignRole, useRevokeRole } from "@/api/queries/users";
-import { ALL_ROLES, ROLE_LABELS, type RoleCode } from "@/lib/constants";
+import { rbacKeys, useRbacRoles, useUserRoles } from "@/api/queries/rbac";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import type { UserOut } from "@/api/types";
-
-const roleOptions = ALL_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
 
 export function ManageRolesModal({
   user,
@@ -19,21 +30,48 @@ export function ManageRolesModal({
   user: UserOut | null;
   onClose: () => void;
 }) {
-  const [role, setRole] = useState<RoleCode>("examiner");
+  const qc = useQueryClient();
+  const rolesQuery = useRbacRoles();
+  const userRolesQuery = useUserRoles(user?.id ?? null);
   const assign = useAssignRole();
   const revoke = useRevokeRole();
+  const [role, setRole] = useState<string | null>(null);
+
+  // Only staff roles + custom staff templates are assignable here.
+  const assignable = useMemo(
+    () => (rolesQuery.data ?? []).filter((r) => r.is_full_access || r.is_staff_template),
+    [rolesQuery.data],
+  );
+
+  const currentRoles = userRolesQuery.data ?? [];
+  const currentCodes = new Set(currentRoles.map((r) => r.code));
+  const options = assignable
+    .filter((r) => r.is_active && !currentCodes.has(r.code))
+    .map((r) => ({ value: r.code, label: r.name }));
 
   if (!user) return null;
 
-  const run = async (mode: "assign" | "revoke") => {
+  const refresh = () => {
+    if (user) qc.invalidateQueries({ queryKey: rbacKeys.userRoles(user.id) });
+  };
+
+  const doAssign = async () => {
+    if (!role) return;
     try {
-      if (mode === "assign") {
-        await assign.mutateAsync({ userId: user.id, roleCode: role });
-        notifySuccess(`Assigned ${ROLE_LABELS[role]}.`);
-      } else {
-        await revoke.mutateAsync({ userId: user.id, roleCode: role });
-        notifySuccess(`Revoked ${ROLE_LABELS[role]}.`);
-      }
+      await assign.mutateAsync({ userId: user.id, roleCode: role });
+      notifySuccess("Role assigned.");
+      setRole(null);
+      refresh();
+    } catch (err) {
+      notifyError(err, "Role update failed");
+    }
+  };
+
+  const doRevoke = async (code: string) => {
+    try {
+      await revoke.mutateAsync({ userId: user.id, roleCode: code });
+      notifySuccess("Role revoked.");
+      refresh();
     } catch (err) {
       notifyError(err, "Role update failed");
     }
@@ -45,23 +83,57 @@ export function ManageRolesModal({
         <Text size="sm" c="dimmed">
           {user.email ?? user.phone ?? user.id}
         </Text>
-        <Select
-          label="Role"
-          data={roleOptions}
-          value={role}
-          onChange={(v) => setRole((v as RoleCode) ?? "examiner")}
-          allowDeselect={false}
-        />
-        <Group justify="flex-end" mt="sm">
-          <Button
-            variant="light"
-            color="red"
-            loading={revoke.isPending}
-            onClick={() => run("revoke")}
-          >
-            Revoke
-          </Button>
-          <Button loading={assign.isPending} onClick={() => run("assign")}>
+
+        <div>
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb={6}>
+            Current roles
+          </Text>
+          {userRolesQuery.isLoading ? (
+            <Loader size="sm" />
+          ) : currentRoles.length === 0 ? (
+            <Text size="sm" c="dimmed">
+              No roles assigned.
+            </Text>
+          ) : (
+            <Group gap="xs">
+              {currentRoles.map((r) => (
+                <Badge
+                  key={r.code}
+                  variant="light"
+                  color={r.is_full_access ? "red" : "brand"}
+                  rightSection={
+                    <Tooltip label={`Revoke ${r.name}`}>
+                      <ActionIcon
+                        size="xs"
+                        variant="transparent"
+                        color="gray"
+                        onClick={() => doRevoke(r.code)}
+                        aria-label={`Revoke ${r.name}`}
+                      >
+                        <IconTrash size={12} />
+                      </ActionIcon>
+                    </Tooltip>
+                  }
+                >
+                  {r.name}
+                </Badge>
+              ))}
+            </Group>
+          )}
+        </div>
+
+        <Group align="flex-end" gap="sm">
+          <Select
+            label="Assign a staff role"
+            placeholder={options.length ? "Select a role" : "No more roles to assign"}
+            data={options}
+            value={role}
+            onChange={setRole}
+            disabled={options.length === 0}
+            searchable
+            style={{ flex: 1 }}
+          />
+          <Button onClick={doAssign} loading={assign.isPending} disabled={!role}>
             Assign
           </Button>
         </Group>

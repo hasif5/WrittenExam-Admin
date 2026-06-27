@@ -87,7 +87,11 @@ export function ApplicationDrawer({
       onClose={onClose}
       position="right"
       size="lg"
-      title={<Title order={4}>Examiner application</Title>}
+      title={
+        <Text component="span" fw={600} fz="lg">
+          Examiner application
+        </Text>
+      }
     >
       {query.isLoading ? (
         <Center h={200}>

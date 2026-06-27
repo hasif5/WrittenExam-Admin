@@ -9,6 +9,7 @@ interface UsersParams {
   search?: string;
   limit: number;
   offset: number;
+  userType?: "frontend" | "staff";
 }
 
 export const userKeys = {
@@ -22,7 +23,12 @@ export function useUsers(params: UsersParams) {
     queryKey: userKeys.list(params),
     queryFn: () =>
       api.get<Page<UserOut>>("/admin/users", {
-        query: { search: params.search, limit: params.limit, offset: params.offset },
+        query: {
+          search: params.search,
+          limit: params.limit,
+          offset: params.offset,
+          user_type: params.userType,
+        },
       }),
   });
 }
@@ -56,10 +62,11 @@ export function useRevokeRole() {
   });
 }
 
-export function useDeletionQueue() {
+export function useDeletionQueue(enabled = true) {
   return useQuery({
     queryKey: userKeys.deletionQueue,
     queryFn: () => api.get<AccountDeletionRequestOut[]>("/admin/users/deletion-queue"),
+    enabled,
   });
 }
 

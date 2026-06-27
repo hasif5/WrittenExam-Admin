@@ -9,9 +9,6 @@ export const API_BASE = `${API_ORIGIN}/api/v1`;
 
 export const REFRESH_TOKEN_STORAGE_KEY = "wep_admin_refresh_token";
 
-export const STAFF_ROLES = ["admin", "finance"] as const;
-export type StaffRole = (typeof STAFF_ROLES)[number];
-
 export const ALL_ROLES = ["student", "examiner", "pool", "admin", "finance"] as const;
 export type RoleCode = (typeof ALL_ROLES)[number];
 

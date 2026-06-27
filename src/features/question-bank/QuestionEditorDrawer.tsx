@@ -14,7 +14,6 @@ import {
   Select,
   Stack,
   Text,
-  Title,
 } from "@mantine/core";
 import { QuestionRichText } from "./QuestionRichText";
 import { QuestionAssets } from "./QuestionAssets";
@@ -151,7 +150,11 @@ export function QuestionEditorDrawer({
       onClose={onClose}
       position="right"
       size="xl"
-      title={<Title order={4}>{isEdit ? "Edit question" : "New question"}</Title>}
+      title={
+        <Text component="span" fw={600} fz="lg">
+          {isEdit ? "Edit question" : "New question"}
+        </Text>
+      }
     >
       {loadingDetail ? (
         <Center h={200}>

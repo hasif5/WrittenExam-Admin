@@ -2,13 +2,12 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import type { ReactNode } from "react";
-import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/auth/AuthContext";
 import { ApiError } from "@/lib/errors";
-import { theme } from "./theme";
+import { AppearanceProvider } from "./AppearanceProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,13 +27,13 @@ const queryClient = new QueryClient({
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <MantineProvider theme={theme} defaultColorScheme="dark">
+    <AppearanceProvider>
       <Notifications position="top-right" />
       <QueryClientProvider client={queryClient}>
         <ModalsProvider>
           <AuthProvider>{children}</AuthProvider>
         </ModalsProvider>
       </QueryClientProvider>
-    </MantineProvider>
+    </AppearanceProvider>
   );
 }

@@ -5,6 +5,7 @@
 import {
   IconGauge,
   IconUsers,
+  IconShieldLock,
   IconTrash,
   IconClipboardList,
   IconUserCheck,
@@ -25,6 +26,8 @@ export interface NavItem {
   icon: Icon;
   // Optional live count badge (resolved by the sidebar from query data).
   badge?: NavBadge;
+  // Permission required to see/use this surface; omitted = visible to any staff.
+  permission?: string;
 }
 
 export interface NavSection {
@@ -43,16 +46,31 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "People",
     items: [
-      { label: "Users & Roles", to: "/users", icon: IconUsers },
-      { label: "Examiner Applications", to: "/examiner-applications", icon: IconClipboardList },
-      { label: "Examiner Roster", to: "/examiners", icon: IconUserCheck },
+      { label: "Users", to: "/users", icon: IconUsers, permission: "users.read" },
+      {
+        label: "Examiner Applications",
+        to: "/examiner-applications",
+        icon: IconClipboardList,
+        permission: "examiner_apps.review",
+      },
+      {
+        label: "Examiner Roster",
+        to: "/examiners",
+        icon: IconUserCheck,
+        permission: "examiners.manage",
+      },
     ],
   },
   {
     title: "Content",
     items: [
-      { label: "Taxonomy", to: "/taxonomy", icon: IconCategory2 },
-      { label: "Question Bank", to: "/questions", icon: IconBook2 },
+      { label: "Taxonomy", to: "/taxonomy", icon: IconCategory2, permission: "taxonomy.read" },
+      {
+        label: "Question Bank",
+        to: "/questions",
+        icon: IconBook2,
+        permission: "question_bank.read",
+      },
     ],
   },
   {
@@ -61,10 +79,17 @@ export const NAV_SECTIONS: NavSection[] = [
     topDivider: true,
     items: [
       {
+        label: "Roles & Permissions",
+        to: "/roles",
+        icon: IconShieldLock,
+        permission: "rbac.manage",
+      },
+      {
         label: "Deletion Queue",
         to: "/users/deletion-queue",
         icon: IconTrash,
         badge: "deletion-queue",
+        permission: "deletion_queue.review",
       },
     ],
   },
