@@ -126,7 +126,16 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
   question-independent, so images work before first save - the old "save first to attach" grid
   (`QuestionAssets`), `useAttachQuestionAsset`, and the attachments section are removed. The
   backend reconciles the embedded ids into the asset junction, so `tiptapDoc.isDocEmpty` treats an
-  `assetImage` (with an id) as non-empty content. See `../docs/phase-1-7-inline-images-plan.md`.
+  `assetImage` (with an id) as non-empty content. Upload uses `uploadAssetWithProgress`
+  (`api/client.ts`, XHR - the one place we leave `fetch` - because `fetch` cannot report upload
+  progress) with the same Bearer auth + 401 refresh+retry; `QuestionRichText` shows a determinate
+  Mantine `Progress` bar + a 10 MB client guard. The editor drawer is full-width below `48em`
+  (`useMediaQuery`) and the taxonomy block uses a responsive `SimpleGrid`. `AssetImage` fetches via
+  `getAssetBlobCached` (`api/client.ts`) - asset bytes are immutable per id, so the blob fetch is
+  cached/de-duped per session (each consumer still creates/revokes its own object URL), removing the
+  re-download flicker on editor remounts. Picking an image opens an optional `ImageCropModal`
+  (`react-easy-crop` + a canvas `cropImage.ts` helper, output mime constrained to allowed types;
+  "Use original" skips it) before the upload runs. See `../docs/phase-1-7-inline-images-plan.md`.
 - **File header (branding) - required on every source file.** Leading `//` comment block with:
   one-line purpose, `File:` path relative to `admin/`, `Author: Hasif Ahmed <xmart@live.com>
   (www.hasif.info)`, `Created: <YYYY-MM-DD>`. Place it above any TypeScript triple-slash directive.

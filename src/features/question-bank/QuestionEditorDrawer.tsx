@@ -28,6 +28,7 @@ import {
   moveChild,
   type ChildDraft,
 } from "./childDoc";
+import { useMediaQuery } from "@mantine/hooks";
 import { EMPTY_DOC, isDocEmpty, type TiptapDoc } from "./tiptapDoc";
 import { useSections, useSubjects, useChapters } from "@/api/queries/taxonomy";
 import { useCreateQuestion, useQuestion, useUpdateQuestion } from "@/api/queries/questions";
@@ -46,6 +47,7 @@ export function QuestionEditorDrawer({
   questionId,
   onClose,
 }: QuestionEditorDrawerProps) {
+  const isMobile = useMediaQuery("(max-width: 48em)");
   const detail = useQuestion(questionId);
   const sections = useSections(true);
 
@@ -195,7 +197,7 @@ export function QuestionEditorDrawer({
       opened={opened}
       onClose={onClose}
       position="right"
-      size="xl"
+      size={isMobile ? "100%" : "xl"}
       title={
         <Text component="span" fw={600} fz="lg">
           {isEdit ? "Edit question" : "New question"}

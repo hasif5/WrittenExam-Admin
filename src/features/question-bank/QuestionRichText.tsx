@@ -5,16 +5,19 @@
 
 import { useState } from "react";
 import { RichTextEditor } from "@mantine/tiptap";
-import { Button, FileButton, Group, Modal, Text, TextInput } from "@mantine/core";
+import { Button, FileButton, Group, Modal, Progress, Text, TextInput } from "@mantine/core";
 import { IconMathFunction, IconPhotoPlus } from "@tabler/icons-react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { InlineMath } from "./mathExtension";
 import { AssetImageNode } from "./assetImageExtension";
+import { ImageCropModal } from "./ImageCropModal";
 import { EMPTY_DOC, type TiptapDoc } from "./tiptapDoc";
 import { useUploadAsset } from "@/api/queries/assets";
 import { notifyError } from "@/lib/notify";
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 interface QuestionRichTextProps {
   value: TiptapDoc | null;
@@ -26,7 +29,10 @@ interface QuestionRichTextProps {
 export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionRichTextProps) {
   const [mathOpen, setMathOpen] = useState(false);
   const [latex, setLatex] = useState("");
+  const [progress, setProgress] = useState<number | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const upload = useUploadAsset();
+  const uploading = progress !== null;
 
   const editor = useEditor({
     extensions: [StarterKit, Link, InlineMath, AssetImageNode],
@@ -42,13 +48,29 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
     setMathOpen(false);
   };
 
-  const handleImage = async (file: File | null) => {
+  const pickImage = (file: File | null) => {
     if (!file || !editor) return;
+    if (file.size > MAX_IMAGE_BYTES) {
+      notifyError(new Error("Image must be 10 MB or smaller."), "Image too large");
+      return;
+    }
+    setCropFile(file); // open the optional crop step before uploading
+  };
+
+  const uploadAndInsert = async (file: File) => {
+    if (!editor) return;
+    setCropFile(null);
+    setProgress(0);
     try {
-      const asset = await upload.mutateAsync(file);
+      const asset = await upload.mutateAsync({
+        file,
+        onProgress: (fraction) => setProgress(Math.round(fraction * 100)),
+      });
       editor.chain().focus().insertAssetImage(asset.id).run();
     } catch (err) {
       notifyError(err, "Image upload failed");
+    } finally {
+      setProgress(null);
     }
   };
 
@@ -85,13 +107,13 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
             >
               <IconMathFunction size={16} />
             </RichTextEditor.Control>
-            <FileButton onChange={handleImage} accept="image/png,image/jpeg,image/webp">
+            <FileButton onChange={pickImage} accept="image/png,image/jpeg,image/webp">
               {(props) => (
                 <RichTextEditor.Control
                   {...props}
                   aria-label="Insert image"
                   title="Insert image"
-                  disabled={upload.isPending}
+                  disabled={uploading}
                 >
                   <IconPhotoPlus size={16} />
                 </RichTextEditor.Control>
@@ -99,6 +121,22 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
             </FileButton>
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>
+
+        {uploading && (
+          <Group gap="xs" px="sm" py={6} wrap="nowrap" align="center">
+            <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+              Uploading image {progress}%
+            </Text>
+            <Progress
+              value={progress ?? 0}
+              size="sm"
+              striped
+              animated
+              style={{ flex: 1 }}
+              transitionDuration={150}
+            />
+          </Group>
+        )}
 
         <RichTextEditor.Content style={{ minHeight }} />
       </RichTextEditor>
@@ -126,6 +164,12 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
           <Button onClick={insertMath}>Insert</Button>
         </Group>
       </Modal>
+
+      <ImageCropModal
+        file={cropFile}
+        onCancel={() => setCropFile(null)}
+        onConfirm={uploadAndInsert}
+      />
     </>
   );
 }

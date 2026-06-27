@@ -1364,10 +1364,6 @@ export interface components {
              * Format: uuid
              */
             asset_id: string;
-            /** Role */
-            role?: string | null;
-            /** Caption */
-            caption?: string | null;
         };
         /**
          * QuestionChildIn

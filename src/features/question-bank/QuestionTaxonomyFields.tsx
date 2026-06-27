@@ -5,7 +5,7 @@
 // Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
 // Created: 2026-06-27
 
-import { Group, Select } from "@mantine/core";
+import { Select, SimpleGrid } from "@mantine/core";
 import { QUESTION_TYPES, type QuestionType } from "@/lib/constants";
 
 interface Option {
@@ -41,44 +41,40 @@ export function QuestionTaxonomyFields({
   onTypeChange,
 }: QuestionTaxonomyFieldsProps) {
   return (
-    <>
-      <Group grow align="flex-start">
-        <Select
-          label="Section"
-          data={sectionOptions}
-          value={sectionId}
-          onChange={onSectionChange}
-          searchable
-          placeholder="Select section"
-        />
-        <Select
-          label="Subject"
-          data={subjectOptions}
-          value={subjectId}
-          onChange={onSubjectChange}
-          searchable
-          disabled={!sectionId}
-          placeholder="Select subject"
-        />
-      </Group>
-      <Group grow align="flex-start">
-        <Select
-          label="Chapter"
-          data={chapterOptions}
-          value={chapterId}
-          onChange={onChapterChange}
-          searchable
-          disabled={!subjectId}
-          placeholder="Select chapter"
-        />
-        <Select
-          label="Type"
-          data={QUESTION_TYPES as unknown as Option[]}
-          value={type}
-          onChange={(v) => onTypeChange((v as QuestionType) ?? "broad_written")}
-          allowDeselect={false}
-        />
-      </Group>
-    </>
+    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm" verticalSpacing="sm">
+      <Select
+        label="Section"
+        data={sectionOptions}
+        value={sectionId}
+        onChange={onSectionChange}
+        searchable
+        placeholder="Select section"
+      />
+      <Select
+        label="Subject"
+        data={subjectOptions}
+        value={subjectId}
+        onChange={onSubjectChange}
+        searchable
+        disabled={!sectionId}
+        placeholder="Select subject"
+      />
+      <Select
+        label="Chapter"
+        data={chapterOptions}
+        value={chapterId}
+        onChange={onChapterChange}
+        searchable
+        disabled={!subjectId}
+        placeholder="Select chapter"
+      />
+      <Select
+        label="Type"
+        data={QUESTION_TYPES as unknown as Option[]}
+        value={type}
+        onChange={(v) => onTypeChange((v as QuestionType) ?? "broad_written")}
+        allowDeselect={false}
+      />
+    </SimpleGrid>
   );
 }

@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { Center, Image, Loader, Stack, Text } from "@mantine/core";
 import { IconPhotoOff } from "@tabler/icons-react";
-import { fetchAssetBlob } from "@/api/client";
+import { getAssetBlobCached } from "@/api/client";
 import { errorMessage } from "@/lib/errors";
 
 interface AssetImageProps {
@@ -36,25 +36,28 @@ export function AssetImage({
       return;
     }
     let revoked: string | null = null;
-    const controller = new AbortController();
+    let cancelled = false;
     setLoading(true);
     setError(null);
 
-    fetchAssetBlob(assetId, controller.signal)
+    // The fetch is shared/cached across mounts, so it is not aborted per-mount;
+    // a cancelled flag just prevents using the result after unmount.
+    getAssetBlobCached(assetId)
       .then((blob) => {
+        if (cancelled) return;
         const objectUrl = URL.createObjectURL(blob);
         revoked = objectUrl;
         setUrl(objectUrl);
       })
       .catch((err) => {
-        if (!controller.signal.aborted) setError(errorMessage(err));
+        if (!cancelled) setError(errorMessage(err));
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!cancelled) setLoading(false);
       });
 
     return () => {
-      controller.abort();
+      cancelled = true;
       if (revoked) URL.revokeObjectURL(revoked);
     };
   }, [assetId]);

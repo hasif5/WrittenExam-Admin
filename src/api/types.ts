@@ -22,7 +22,6 @@ export type SectionOut = Schemas["SectionOut"];
 export type SubjectOut = Schemas["SubjectOut"];
 export type ChapterOut = Schemas["ChapterOut"];
 export type QuestionOut = Schemas["QuestionOut"];
-export type QuestionAssetOut = Schemas["QuestionAssetOut"];
 export type QuestionUsageOut = Schemas["QuestionUsageOut"];
 export type AssetOut = Schemas["AssetOut"];
 
