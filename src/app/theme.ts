@@ -103,6 +103,22 @@ export const baseTheme = createTheme({
         root: { borderRadius: "var(--mantine-radius-md)" },
       },
     },
+    // Every floating dropdown lifts off the surface with a subtle shadow by
+    // default, app-wide and in both schemes. Combobox is the base for Select /
+    // MultiSelect / Autocomplete / TagsInput; the rest cover menu/popover/hover
+    // dropdowns. Pages can still override per-instance via the `shadow` prop.
+    Combobox: {
+      defaultProps: { shadow: "sm" },
+    },
+    Menu: {
+      defaultProps: { shadow: "sm" },
+    },
+    Popover: {
+      defaultProps: { shadow: "sm" },
+    },
+    HoverCard: {
+      defaultProps: { shadow: "sm" },
+    },
   },
 });
 
