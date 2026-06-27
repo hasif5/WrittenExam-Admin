@@ -1,16 +1,20 @@
 // Rich text editor for question content / solution: TipTap (StarterKit + Link +
-// inline KaTeX math) wrapped by @mantine/tiptap. Emits TipTap JSON on change.
+// inline KaTeX math + permissioned inline images) wrapped by @mantine/tiptap.
+// Emits TipTap JSON on change; image uploads insert an assetImage node by id.
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useState } from "react";
 import { RichTextEditor } from "@mantine/tiptap";
-import { Button, Group, Modal, Text, TextInput } from "@mantine/core";
-import { IconMathFunction } from "@tabler/icons-react";
+import { Button, FileButton, Group, Modal, Text, TextInput } from "@mantine/core";
+import { IconMathFunction, IconPhotoPlus } from "@tabler/icons-react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { InlineMath } from "./mathExtension";
+import { AssetImageNode } from "./assetImageExtension";
 import { EMPTY_DOC, type TiptapDoc } from "./tiptapDoc";
+import { useUploadAsset } from "@/api/queries/assets";
+import { notifyError } from "@/lib/notify";
 
 interface QuestionRichTextProps {
   value: TiptapDoc | null;
@@ -22,9 +26,10 @@ interface QuestionRichTextProps {
 export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionRichTextProps) {
   const [mathOpen, setMathOpen] = useState(false);
   const [latex, setLatex] = useState("");
+  const upload = useUploadAsset();
 
   const editor = useEditor({
-    extensions: [StarterKit, Link, InlineMath],
+    extensions: [StarterKit, Link, InlineMath, AssetImageNode],
     content: value ?? EMPTY_DOC,
     onUpdate: ({ editor }) => onChange(editor.getJSON() as TiptapDoc),
   });
@@ -35,6 +40,16 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
     }
     setLatex("");
     setMathOpen(false);
+  };
+
+  const handleImage = async (file: File | null) => {
+    if (!file || !editor) return;
+    try {
+      const asset = await upload.mutateAsync(file);
+      editor.chain().focus().insertAssetImage(asset.id).run();
+    } catch (err) {
+      notifyError(err, "Image upload failed");
+    }
   };
 
   return (
@@ -70,6 +85,18 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
             >
               <IconMathFunction size={16} />
             </RichTextEditor.Control>
+            <FileButton onChange={handleImage} accept="image/png,image/jpeg,image/webp">
+              {(props) => (
+                <RichTextEditor.Control
+                  {...props}
+                  aria-label="Insert image"
+                  title="Insert image"
+                  disabled={upload.isPending}
+                >
+                  <IconPhotoPlus size={16} />
+                </RichTextEditor.Control>
+              )}
+            </FileButton>
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>
 

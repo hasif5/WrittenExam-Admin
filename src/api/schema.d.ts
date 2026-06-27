@@ -918,23 +918,6 @@ export interface paths {
         patch: operations["update_question_api_v1_admin_questions__question_id__patch"];
         trace?: never;
     };
-    "/api/v1/admin/questions/{question_id}/assets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Attach Asset */
-        post: operations["attach_asset_api_v1_admin_questions__question_id__assets_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/questions/{question_id}/usage": {
         parameters: {
             query?: never;
@@ -1368,18 +1351,6 @@ export interface components {
             group: string;
             /** Is Active */
             is_active: boolean;
-        };
-        /** QuestionAssetIn */
-        QuestionAssetIn: {
-            /**
-             * Asset Id
-             * Format: uuid
-             */
-            asset_id: string;
-            /** Role */
-            role?: string | null;
-            /** Caption */
-            caption?: string | null;
         };
         /** QuestionAssetOut */
         QuestionAssetOut: {
@@ -3968,41 +3939,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuestionOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    attach_asset_api_v1_admin_questions__question_id__assets_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                question_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["QuestionAssetIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QuestionAssetOut"];
                 };
             };
             /** @description Validation Error */

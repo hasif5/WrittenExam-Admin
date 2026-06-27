@@ -1,7 +1,8 @@
 // Create / edit a Question Bank entry: taxonomy + type + rich stem content +
 // mandatory solution, plus (for passage_with_children) an ordered, reorderable
-// list of child sub-questions saved atomically (D5). Image assets attach in
-// edit mode only (D7). Thin composition root over the extracted sub-editors.
+// list of child sub-questions saved atomically (D5). Images are inserted inline
+// in each rich-text field; the backend reconciles them into the asset junction.
+// Thin composition root over the extracted sub-editors.
 // File: src/features/question-bank/QuestionEditorDrawer.tsx
 // Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
 // Created: 2026-06-27
@@ -19,7 +20,6 @@ import {
   Text,
 } from "@mantine/core";
 import { QuestionRichText } from "./QuestionRichText";
-import { QuestionAssets } from "./QuestionAssets";
 import { QuestionTaxonomyFields } from "./QuestionTaxonomyFields";
 import { ChildQuestionList } from "./ChildQuestionList";
 import {
@@ -33,7 +33,6 @@ import { useSections, useSubjects, useChapters } from "@/api/queries/taxonomy";
 import { useCreateQuestion, useQuestion, useUpdateQuestion } from "@/api/queries/questions";
 import { PASSAGE_WITH_CHILDREN, type QuestionType } from "@/lib/constants";
 import { notifyError, notifySuccess } from "@/lib/notify";
-import type { QuestionAssetOut } from "@/api/types";
 import type { Schemas } from "@/api/client";
 
 interface QuestionEditorDrawerProps {
@@ -47,10 +46,7 @@ export function QuestionEditorDrawer({
   questionId,
   onClose,
 }: QuestionEditorDrawerProps) {
-  const [createdId, setCreatedId] = useState<string | null>(null);
-  const effectiveId = questionId ?? createdId;
-
-  const detail = useQuestion(effectiveId);
+  const detail = useQuestion(questionId);
   const sections = useSections(true);
 
   const [sectionId, setSectionId] = useState<string | null>(null);
@@ -72,7 +68,6 @@ export function QuestionEditorDrawer({
   // Reset on open / target change.
   useEffect(() => {
     if (!opened) return;
-    setCreatedId(null);
     setSolutionError(null);
     if (!questionId) {
       setSectionId(null);
@@ -115,17 +110,10 @@ export function QuestionEditorDrawer({
     () => (chapters.data ?? []).map((c) => ({ value: c.id, label: c.name })),
     [chapters.data],
   );
-  const assetsByChildId = useMemo(() => {
-    const map: Record<string, QuestionAssetOut[]> = {};
-    (detail.data?.children ?? []).forEach((c) => {
-      map[c.id] = c.assets ?? [];
-    });
-    return map;
-  }, [detail.data]);
 
-  const isEdit = Boolean(effectiveId);
+  const isEdit = Boolean(questionId);
   const isPassageParent = type === PASSAGE_WITH_CHILDREN;
-  const loadingDetail = Boolean(effectiveId) && detail.isLoading;
+  const loadingDetail = Boolean(questionId) && detail.isLoading;
 
   const patchChild = (localId: string, patch: Partial<ChildDraft>) =>
     setChildDrafts((prev) =>
@@ -186,21 +174,17 @@ export function QuestionEditorDrawer({
     const children = isPassageParent ? buildChildrenPayload() : undefined;
 
     try {
-      if (effectiveId) {
+      if (questionId) {
         await updateQuestion.mutateAsync({
-          id: effectiveId,
+          id: questionId,
           body: { ...base, ...(children ? { children } : {}) },
         });
         notifySuccess("Question saved.");
-        onClose();
       } else {
-        const created = await createQuestion.mutateAsync({
-          ...base,
-          children: children ?? [],
-        });
-        setCreatedId(created.id);
-        notifySuccess("Question created. You can now attach images.");
+        await createQuestion.mutateAsync({ ...base, children: children ?? [] });
+        notifySuccess("Question created.");
       }
+      onClose();
     } catch (err) {
       notifyError(err, "Save failed");
     }
@@ -283,7 +267,6 @@ export function QuestionEditorDrawer({
               <Divider label="Child questions" labelPosition="left" />
               <ChildQuestionList
                 childDrafts={childDrafts}
-                assetsByChildId={assetsByChildId}
                 onChange={patchChild}
                 onMove={(index, dir) =>
                   setChildDrafts((prev) => moveChild(prev, index, dir))
@@ -296,20 +279,6 @@ export function QuestionEditorDrawer({
                 }
               />
             </>
-          )}
-
-          {effectiveId && detail.data ? (
-            <>
-              <Divider label="Attachments" labelPosition="left" />
-              <QuestionAssets
-                questionId={effectiveId}
-                assets={detail.data.assets ?? []}
-              />
-            </>
-          ) : (
-            <Text size="xs" c="dimmed">
-              Save the question first to attach images.
-            </Text>
           )}
 
           <Group justify="flex-end" mt="sm">

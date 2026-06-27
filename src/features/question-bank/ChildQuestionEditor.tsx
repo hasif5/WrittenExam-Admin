@@ -1,6 +1,5 @@
-// One child sub-question of a passage: content + mandatory solution editors,
-// reorder (up/down) and remove controls, and a two-phase image-attach panel
-// (available only after the child is saved and has an id, D7).
+// One child sub-question of a passage: content + mandatory solution editors
+// (each supporting inline images) plus reorder (up/down) and remove controls.
 // File: src/features/question-bank/ChildQuestionEditor.tsx
 // Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
 // Created: 2026-06-27
@@ -8,16 +7,13 @@
 import { ActionIcon, Box, Card, Group, Text } from "@mantine/core";
 import { IconArrowDown, IconArrowUp, IconTrash } from "@tabler/icons-react";
 import { QuestionRichText } from "./QuestionRichText";
-import { QuestionAssets } from "./QuestionAssets";
 import type { ChildDraft } from "./childDoc";
 import type { TiptapDoc } from "./tiptapDoc";
-import type { QuestionAssetOut } from "@/api/types";
 
 interface ChildQuestionEditorProps {
   index: number;
   total: number;
   child: ChildDraft;
-  assets: QuestionAssetOut[];
   onContentChange: (doc: TiptapDoc) => void;
   onSolutionChange: (doc: TiptapDoc) => void;
   onMove: (dir: -1 | 1) => void;
@@ -28,7 +24,6 @@ export function ChildQuestionEditor({
   index,
   total,
   child,
-  assets,
   onContentChange,
   onSolutionChange,
   onMove,
@@ -99,16 +94,6 @@ export function ChildQuestionEditor({
           </Text>
         )}
       </Box>
-
-      {child.questionId ? (
-        <Box mt="sm">
-          <QuestionAssets questionId={child.questionId} assets={assets} />
-        </Box>
-      ) : (
-        <Text size="xs" c="dimmed" mt="sm">
-          Save the question first to attach images.
-        </Text>
-      )}
     </Card>
   );
 }

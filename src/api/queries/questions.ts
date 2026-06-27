@@ -3,12 +3,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Schemas } from "@/api/client";
-import type {
-  Page,
-  QuestionAssetOut,
-  QuestionOut,
-  QuestionUsageOut,
-} from "@/api/types";
+import type { Page, QuestionOut, QuestionUsageOut } from "@/api/types";
 import type { QuestionType } from "@/lib/constants";
 
 export interface QuestionFilters {
@@ -79,21 +74,6 @@ export function useDeleteQuestion() {
   return useMutation({
     mutationFn: (id: string) =>
       api.del<Schemas["MessageResponse"]>(`/admin/questions/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: questionKeys.all }),
-  });
-}
-
-export function useAttachQuestionAsset() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      questionId,
-      body,
-    }: {
-      questionId: string;
-      body: Schemas["QuestionAssetIn"];
-    }) =>
-      api.post<QuestionAssetOut>(`/admin/questions/${questionId}/assets`, { body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: questionKeys.all }),
   });
 }

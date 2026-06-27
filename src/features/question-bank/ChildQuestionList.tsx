@@ -11,11 +11,9 @@ import { ChildQuestionEditor } from "./ChildQuestionEditor";
 import type { ChildDraft } from "./childDoc";
 import type { TiptapDoc } from "./tiptapDoc";
 import { confirmAction } from "@/lib/confirm";
-import type { QuestionAssetOut } from "@/api/types";
 
 interface ChildQuestionListProps {
   childDrafts: ChildDraft[];
-  assetsByChildId: Record<string, QuestionAssetOut[]>;
   onChange: (localId: string, patch: Partial<ChildDraft>) => void;
   onMove: (index: number, dir: -1 | 1) => void;
   onRemove: (localId: string) => void;
@@ -24,7 +22,6 @@ interface ChildQuestionListProps {
 
 export function ChildQuestionList({
   childDrafts,
-  assetsByChildId,
   onChange,
   onMove,
   onRemove,
@@ -63,7 +60,6 @@ export function ChildQuestionList({
           index={index}
           total={childDrafts.length}
           child={child}
-          assets={child.questionId ? (assetsByChildId[child.questionId] ?? []) : []}
           onContentChange={(doc: TiptapDoc) => onChange(child.localId, { content: doc })}
           onSolutionChange={(doc: TiptapDoc) =>
             onChange(child.localId, { solution: doc, solutionError: null })

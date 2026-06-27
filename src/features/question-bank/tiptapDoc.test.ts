@@ -34,4 +34,20 @@ describe("tiptapDoc", () => {
     const doc = { type: "doc", content: [{ type: "image", attrs: { src: "x" } }] };
     expect(isDocEmpty(doc)).toBe(false);
   });
+
+  it("treats an assetImage-only document as non-empty", () => {
+    const doc = {
+      type: "doc",
+      content: [{ type: "assetImage", attrs: { assetId: "abc-123" } }],
+    };
+    expect(isDocEmpty(doc)).toBe(false);
+  });
+
+  it("ignores an assetImage with no id", () => {
+    const doc = {
+      type: "doc",
+      content: [{ type: "assetImage", attrs: { assetId: "" } }],
+    };
+    expect(isDocEmpty(doc)).toBe(true);
+  });
 });

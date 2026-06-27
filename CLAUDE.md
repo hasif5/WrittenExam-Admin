@@ -112,12 +112,21 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
   editors below the stem; the whole tree saves in one composite create/update (children embedded in
   the `QuestionCreate`/`QuestionUpdate` body, D5). Children carry no taxonomy selects (inherited
   server-side, D6); each child is keyed by a stable `localId` so reorder/remove never scrambles
-  editor instances; per-child (and stem) image attach is edit-mode-only (D7). The Question Bank list
+  editor instances. The Question Bank list
   uses `DataTable` row expansion (`enableExpanding` + `getSubRows={(row) => row.children}`) and
   gates New/Edit/Delete behind `useAuth().can("question_bank.write")`. `DataTable` exposes generic
   expansion pass-throughs (`enableExpanding`/`getSubRows`/`renderDetailPanel`/`enableExpandAll`) -
   keep table-specific logic in the page, not the wrapper. See
   `../docs/phase-1-6-passage-child-questions-plan.md`.
+- **Inline images (Phase 1.7):** images are inserted **inside** each rich-text field (stem content,
+  stem solution, every child content, every child solution) via a custom TipTap `assetImage` node
+  (`assetImageExtension.tsx`) that stores only `assetId` and renders through the authenticated
+  `AssetImage`. `QuestionRichText` registers the node and adds a toolbar upload control
+  (`FileButton` + `useUploadAsset`), so all four fields get it for free. Upload is
+  question-independent, so images work before first save - the old "save first to attach" grid
+  (`QuestionAssets`), `useAttachQuestionAsset`, and the attachments section are removed. The
+  backend reconciles the embedded ids into the asset junction, so `tiptapDoc.isDocEmpty` treats an
+  `assetImage` (with an id) as non-empty content. See `../docs/phase-1-7-inline-images-plan.md`.
 - **File header (branding) - required on every source file.** Leading `//` comment block with:
   one-line purpose, `File:` path relative to `admin/`, `Author: Hasif Ahmed <xmart@live.com>
   (www.hasif.info)`, `Created: <YYYY-MM-DD>`. Place it above any TypeScript triple-slash directive.

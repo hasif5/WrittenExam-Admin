@@ -6,7 +6,7 @@ export type TiptapDoc = Record<string, unknown>;
 interface TiptapNode {
   type?: string;
   text?: string;
-  attrs?: { latex?: string };
+  attrs?: { latex?: string; assetId?: string };
   content?: TiptapNode[];
 }
 
@@ -29,10 +29,13 @@ export function docToPlainText(doc: unknown): string {
 export function isDocEmpty(doc: unknown): boolean {
   if (!doc || typeof doc !== "object") return true;
   if (docToPlainText(doc).length > 0) return false;
-  // Account for image-only documents (still meaningful content).
+  // Account for image-only documents (still meaningful content). `assetImage`
+  // is the permissioned inline image node the editor emits.
   let hasImage = false;
   const walk = (node: TiptapNode) => {
-    if (node.type === "image") hasImage = true;
+    if (node.type === "image" || (node.type === "assetImage" && node.attrs?.assetId)) {
+      hasImage = true;
+    }
     if (Array.isArray(node.content)) node.content.forEach(walk);
   };
   walk(doc as TiptapNode);
