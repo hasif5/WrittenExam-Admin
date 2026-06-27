@@ -3,7 +3,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Schemas } from "@/api/client";
-import type { AccountDeletionRequestOut, Page, UserOut } from "@/api/types";
+import type {
+  AccountDeletionRequestOut,
+  Page,
+  UserDetailOut,
+  UserOut,
+} from "@/api/types";
 
 interface UsersParams {
   search?: string;
@@ -15,6 +20,7 @@ interface UsersParams {
 export const userKeys = {
   all: ["users"] as const,
   list: (params: UsersParams) => ["users", "list", params] as const,
+  detail: (id: string) => ["users", "detail", id] as const,
   deletionQueue: ["users", "deletion-queue"] as const,
 };
 
@@ -29,6 +35,49 @@ export function useUsers(params: UsersParams) {
           offset: params.offset,
           user_type: params.userType,
         },
+      }),
+  });
+}
+
+export function useUser(userId: string | null) {
+  return useQuery({
+    queryKey: userKeys.detail(userId ?? ""),
+    queryFn: () => api.get<UserDetailOut>(`/admin/users/${userId}`),
+    enabled: Boolean(userId),
+  });
+}
+
+export function useUpdateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, body }: { userId: string; body: Schemas["AdminUserUpdate"] }) =>
+      api.patch<UserDetailOut>(`/admin/users/${userId}`, { body }),
+    onSuccess: (_data, { userId }) => {
+      qc.invalidateQueries({ queryKey: userKeys.detail(userId) });
+      qc.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+
+export function useSetUserActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, active }: { userId: string; active: boolean }) =>
+      api.post<UserDetailOut>(
+        `/admin/users/${userId}/${active ? "reactivate" : "suspend"}`,
+      ),
+    onSuccess: (_data, { userId }) => {
+      qc.invalidateQueries({ queryKey: userKeys.detail(userId) });
+      qc.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+
+export function useResetUserPassword() {
+  return useMutation({
+    mutationFn: ({ userId, newPassword }: { userId: string; newPassword: string }) =>
+      api.post<Schemas["MessageResponse"]>(`/admin/users/${userId}/reset-password`, {
+        body: { new_password: newPassword },
       }),
   });
 }

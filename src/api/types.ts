@@ -11,6 +11,7 @@ export interface Page<T> {
 }
 
 export type UserOut = Schemas["UserOut"];
+export type UserDetailOut = Schemas["UserDetailOut"];
 export type RoleOut = Schemas["RoleOut"];
 export type RoleDetailOut = Schemas["RoleDetailOut"];
 export type PermissionOut = Schemas["PermissionOut"];

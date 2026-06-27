@@ -5,7 +5,12 @@
 import { useMemo, useState } from "react";
 import { ActionIcon, Badge, Button, Code, Tabs, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDeviceMobile, IconPlus, IconShieldCog, IconUserCog } from "@tabler/icons-react";
+import {
+  IconDeviceMobile,
+  IconPencil,
+  IconPlus,
+  IconShieldCog,
+} from "@tabler/icons-react";
 import type { MRT_ColumnDef } from "mantine-react-table";
 import { PageHero } from "@/components/PageHero";
 import { HEROES } from "@/assets/heroes";
@@ -15,7 +20,7 @@ import { useUsers } from "@/api/queries/users";
 import { useAuth } from "@/auth/useAuth";
 import type { UserOut } from "@/api/types";
 import { CreateStaffModal } from "./CreateStaffModal";
-import { ManageRolesModal } from "./ManageRolesModal";
+import { UserEditorDrawer } from "./UserEditorDrawer";
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
@@ -35,7 +40,14 @@ function verifiedText(user: UserOut): string {
 function FrontendUsersTab() {
   const { pagination, setPagination, limit, offset } = usePagination();
   const [search, setSearch] = useState("");
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [drawerOpened, drawerHandlers] = useDisclosure(false);
   const query = useUsers({ search: search || undefined, limit, offset, userType: "frontend" });
+
+  const openUser = (id: string) => {
+    setEditUserId(id);
+    drawerHandlers.open();
+  };
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -68,34 +80,55 @@ function FrontendUsersTab() {
   );
 
   return (
-    <DataTable<UserOut>
-      columns={columns}
-      data={query.data?.items ?? []}
-      rowCount={query.data?.total ?? 0}
-      pagination={pagination}
-      onPaginationChange={setPagination}
-      isLoading={query.isLoading}
-      isFetching={query.isFetching}
-      isError={query.isError}
-      error={query.error}
-      enableGlobalFilter
-      globalFilter={search}
-      onGlobalFilterChange={handleSearch}
-      searchPlaceholder="Search by phone or email"
-      emptyText="No frontend users found."
-    />
+    <>
+      <DataTable<UserOut>
+        columns={columns}
+        data={query.data?.items ?? []}
+        rowCount={query.data?.total ?? 0}
+        pagination={pagination}
+        onPaginationChange={setPagination}
+        isLoading={query.isLoading}
+        isFetching={query.isFetching}
+        isError={query.isError}
+        error={query.error}
+        enableGlobalFilter
+        globalFilter={search}
+        onGlobalFilterChange={handleSearch}
+        searchPlaceholder="Search by phone or email"
+        emptyText="No frontend users found."
+        enableRowActions
+        renderRowActions={({ row }) => (
+          <Tooltip label="Manage user">
+            <ActionIcon variant="subtle" onClick={() => openUser(row.original.id)}>
+              <IconPencil size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      />
+
+      <UserEditorDrawer
+        opened={drawerOpened}
+        userId={editUserId}
+        onClose={drawerHandlers.close}
+      />
+    </>
   );
 }
 
 function StaffUsersTab() {
   const { can } = useAuth();
   const canCreateStaff = can("users.create_staff");
-  const canManageRoles = can("users.manage_roles");
   const { pagination, setPagination, limit, offset } = usePagination();
   const [search, setSearch] = useState("");
   const [createOpened, createHandlers] = useDisclosure(false);
-  const [rolesUser, setRolesUser] = useState<UserOut | null>(null);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [drawerOpened, drawerHandlers] = useDisclosure(false);
   const query = useUsers({ search: search || undefined, limit, offset, userType: "staff" });
+
+  const openUser = (id: string) => {
+    setEditUserId(id);
+    drawerHandlers.open();
+  };
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -151,18 +184,22 @@ function StaffUsersTab() {
             </Button>
           ) : undefined
         }
-        enableRowActions={canManageRoles}
+        enableRowActions
         renderRowActions={({ row }) => (
-          <Tooltip label="Manage roles">
-            <ActionIcon variant="subtle" onClick={() => setRolesUser(row.original)}>
-              <IconUserCog size={18} />
+          <Tooltip label="Manage user">
+            <ActionIcon variant="subtle" onClick={() => openUser(row.original.id)}>
+              <IconPencil size={18} />
             </ActionIcon>
           </Tooltip>
         )}
       />
 
       <CreateStaffModal opened={createOpened} onClose={createHandlers.close} />
-      <ManageRolesModal user={rolesUser} onClose={() => setRolesUser(null)} />
+      <UserEditorDrawer
+        opened={drawerOpened}
+        userId={editUserId}
+        onClose={drawerHandlers.close}
+      />
     </>
   );
 }
