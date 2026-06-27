@@ -20,6 +20,7 @@ import { usePagination } from "@/lib/usePagination";
 import { useSections, useSubjects, useChapters } from "@/api/queries/taxonomy";
 import { useDeleteQuestion, useQuestions } from "@/api/queries/questions";
 import { QUESTION_TYPES, type QuestionType } from "@/lib/constants";
+import { useAuth } from "@/auth/useAuth";
 import { confirmAction } from "@/lib/confirm";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import type { QuestionOut } from "@/api/types";
@@ -32,6 +33,8 @@ function typeLabel(type: string): string {
 }
 
 export function QuestionBankPage() {
+  const { can } = useAuth();
+  const canWrite = can("question_bank.write");
   const { pagination, setPagination, limit, offset } = usePagination();
   const [sectionId, setSectionId] = useState<string | null>(null);
   const [subjectId, setSubjectId] = useState<string | null>(null);
@@ -119,6 +122,12 @@ export function QuestionBankPage() {
         Cell: ({ row }) => sectionNameById.get(row.original.section_id) ?? "-",
       },
       {
+        id: "children",
+        header: "Children",
+        size: 90,
+        Cell: ({ row }) => row.original.children?.length ?? 0,
+      },
+      {
         id: "images",
         header: "Images",
         size: 90,
@@ -135,9 +144,11 @@ export function QuestionBankPage() {
         title="Question Bank"
         description="Author questions with rich text and LaTeX. A non-empty solution is mandatory."
         actions={
-          <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-            New question
-          </Button>
+          canWrite ? (
+            <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+              New question
+            </Button>
+          ) : undefined
         }
       />
 
@@ -213,6 +224,8 @@ export function QuestionBankPage() {
           resetPage();
         }}
         searchPlaceholder="Keyword (question + solution)"
+        enableExpanding
+        getSubRows={(row) => row.children}
         enableRowActions
         renderRowActions={({ row }) => (
           <Menu shadow="md" position="bottom-end" withinPortal>
@@ -222,20 +235,26 @@ export function QuestionBankPage() {
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item leftSection={<IconEdit size={16} />} onClick={() => openEdit(row.original.id)}>
-                Edit
-              </Menu.Item>
+              {canWrite && (
+                <Menu.Item leftSection={<IconEdit size={16} />} onClick={() => openEdit(row.original.id)}>
+                  Edit
+                </Menu.Item>
+              )}
               <Menu.Item leftSection={<IconEye size={16} />} onClick={() => setUsageId(row.original.id)}>
                 View usage
               </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item
-                color="red"
-                leftSection={<IconTrash size={16} />}
-                onClick={() => onDelete(row.original)}
-              >
-                Delete
-              </Menu.Item>
+              {canWrite && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={() => onDelete(row.original)}
+                  >
+                    Delete
+                  </Menu.Item>
+                </>
+              )}
             </Menu.Dropdown>
           </Menu>
         )}

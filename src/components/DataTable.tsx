@@ -31,6 +31,10 @@ interface DataTableProps<T extends MRT_RowData> {
   emptyText?: string;
   enableRowActions?: boolean;
   renderRowActions?: (props: { row: { original: T } }) => ReactNode;
+  enableExpanding?: boolean;
+  enableExpandAll?: boolean;
+  getSubRows?: (originalRow: T, index: number) => T[] | undefined;
+  renderDetailPanel?: (props: { row: { original: T } }) => ReactNode;
 }
 
 export function DataTable<T extends MRT_RowData>({
@@ -51,6 +55,10 @@ export function DataTable<T extends MRT_RowData>({
   emptyText = "No records found.",
   enableRowActions = false,
   renderRowActions,
+  enableExpanding = false,
+  enableExpandAll = false,
+  getSubRows,
+  renderDetailPanel,
 }: DataTableProps<T>) {
   const table = useMantineReactTable<T>({
     columns,
@@ -90,6 +98,12 @@ export function DataTable<T extends MRT_RowData>({
     enableRowActions,
     renderRowActions: renderRowActions
       ? ({ row }) => renderRowActions({ row: { original: row.original } })
+      : undefined,
+    enableExpanding,
+    enableExpandAll,
+    getSubRows,
+    renderDetailPanel: renderDetailPanel
+      ? ({ row }) => renderDetailPanel({ row: { original: row.original } })
       : undefined,
     positionActionsColumn: "last",
     renderTopToolbarCustomActions: toolbar ? () => <>{toolbar}</> : undefined,

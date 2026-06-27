@@ -16,6 +16,9 @@ import {
   useDeleteChapter,
   useDeleteSection,
   useDeleteSubject,
+  useReorderChapters,
+  useReorderSections,
+  useReorderSubjects,
   useSections,
   useSubjects,
   useUpdateChapter,
@@ -47,8 +50,20 @@ export function TaxonomyPage() {
   const createChapter = useCreateChapter();
   const updateChapter = useUpdateChapter();
   const deleteChapter = useDeleteChapter();
+  const reorderSections = useReorderSections();
+  const reorderSubjects = useReorderSubjects();
+  const reorderChapters = useReorderChapters();
 
   const toNodes = (items: TaxonomyNode[] | undefined) => items ?? [];
+
+  const persistReorder = async (run: () => Promise<unknown>) => {
+    try {
+      await run();
+      notifySuccess("Order updated.");
+    } catch (err) {
+      notifyError(err, "Reorder failed");
+    }
+  };
 
   const confirmDelete = (kind: Kind, node: TaxonomyNode, run: () => Promise<unknown>) =>
     confirmAction({
@@ -66,7 +81,7 @@ export function TaxonomyPage() {
       },
     });
 
-  const saveEdit = async (data: { name: string; is_active: boolean; display_order: number }) => {
+  const saveEdit = async (data: { name: string; is_active: boolean }) => {
     if (!editing) return;
     try {
       if (editing.kind === "section") {
@@ -134,6 +149,9 @@ export function TaxonomyPage() {
               confirmDelete("section", node, () => deleteSection.mutateAsync(node.id))
             }
             onUsage={(node) => setUsageSectionId(node.id)}
+            onReorder={(orderedIds) =>
+              persistReorder(() => reorderSections.mutateAsync(orderedIds))
+            }
           />
         </Grid.Col>
 
@@ -169,6 +187,10 @@ export function TaxonomyPage() {
             onDelete={(node) =>
               confirmDelete("subject", node, () => deleteSubject.mutateAsync(node.id))
             }
+            onReorder={(orderedIds) =>
+              sectionId &&
+              persistReorder(() => reorderSubjects.mutateAsync({ sectionId, orderedIds }))
+            }
           />
         </Grid.Col>
 
@@ -200,6 +222,10 @@ export function TaxonomyPage() {
             onToggleActive={(node) => toggleActive("chapter", node)}
             onDelete={(node) =>
               confirmDelete("chapter", node, () => deleteChapter.mutateAsync(node.id))
+            }
+            onReorder={(orderedIds) =>
+              subjectId &&
+              persistReorder(() => reorderChapters.mutateAsync({ subjectId, orderedIds }))
             }
           />
         </Grid.Col>

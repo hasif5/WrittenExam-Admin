@@ -1,6 +1,10 @@
-// Create / edit a Question Bank entry: taxonomy + type + rich content + mandatory
-// solution (TipTap JSON with inline KaTeX) + image assets (edit mode only).
-// Author: Hasif Ahmed (www.hasif.info)
+// Create / edit a Question Bank entry: taxonomy + type + rich stem content +
+// mandatory solution, plus (for passage_with_children) an ordered, reorderable
+// list of child sub-questions saved atomically (D5). Image assets attach in
+// edit mode only (D7). Thin composition root over the extracted sub-editors.
+// File: src/features/question-bank/QuestionEditorDrawer.tsx
+// Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+// Created: 2026-06-27
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -11,17 +15,26 @@ import {
   Drawer,
   Group,
   Loader,
-  Select,
   Stack,
   Text,
 } from "@mantine/core";
 import { QuestionRichText } from "./QuestionRichText";
 import { QuestionAssets } from "./QuestionAssets";
+import { QuestionTaxonomyFields } from "./QuestionTaxonomyFields";
+import { ChildQuestionList } from "./ChildQuestionList";
+import {
+  childrenToDrafts,
+  makeEmptyChild,
+  moveChild,
+  type ChildDraft,
+} from "./childDoc";
 import { EMPTY_DOC, isDocEmpty, type TiptapDoc } from "./tiptapDoc";
 import { useSections, useSubjects, useChapters } from "@/api/queries/taxonomy";
 import { useCreateQuestion, useQuestion, useUpdateQuestion } from "@/api/queries/questions";
-import { QUESTION_TYPES, type QuestionType } from "@/lib/constants";
+import { PASSAGE_WITH_CHILDREN, type QuestionType } from "@/lib/constants";
 import { notifyError, notifySuccess } from "@/lib/notify";
+import type { QuestionAssetOut } from "@/api/types";
+import type { Schemas } from "@/api/client";
 
 interface QuestionEditorDrawerProps {
   opened: boolean;
@@ -47,6 +60,7 @@ export function QuestionEditorDrawer({
   const [content, setContent] = useState<TiptapDoc>(EMPTY_DOC);
   const [solution, setSolution] = useState<TiptapDoc>(EMPTY_DOC);
   const [solutionError, setSolutionError] = useState<string | null>(null);
+  const [childDrafts, setChildDrafts] = useState<ChildDraft[]>([]);
   const [editorKey, setEditorKey] = useState(0);
 
   const subjects = useSubjects(sectionId ?? undefined);
@@ -67,12 +81,13 @@ export function QuestionEditorDrawer({
       setType("broad_written");
       setContent(EMPTY_DOC);
       setSolution(EMPTY_DOC);
+      setChildDrafts([]);
       setEditorKey((k) => k + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opened, questionId]);
 
-  // Populate when an existing question loads.
+  // Populate when an existing (or freshly created) question loads.
   useEffect(() => {
     const q = detail.data;
     if (q && opened) {
@@ -82,6 +97,7 @@ export function QuestionEditorDrawer({
       setType(q.type as QuestionType);
       setContent((q.content as TiptapDoc) ?? EMPTY_DOC);
       setSolution((q.solution as TiptapDoc) ?? EMPTY_DOC);
+      setChildDrafts(childrenToDrafts(q.children));
       setEditorKey((k) => k + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,9 +115,54 @@ export function QuestionEditorDrawer({
     () => (chapters.data ?? []).map((c) => ({ value: c.id, label: c.name })),
     [chapters.data],
   );
+  const assetsByChildId = useMemo(() => {
+    const map: Record<string, QuestionAssetOut[]> = {};
+    (detail.data?.children ?? []).forEach((c) => {
+      map[c.id] = c.assets ?? [];
+    });
+    return map;
+  }, [detail.data]);
 
   const isEdit = Boolean(effectiveId);
+  const isPassageParent = type === PASSAGE_WITH_CHILDREN;
   const loadingDetail = Boolean(effectiveId) && detail.isLoading;
+
+  const patchChild = (localId: string, patch: Partial<ChildDraft>) =>
+    setChildDrafts((prev) =>
+      prev.map((c) => (c.localId === localId ? { ...c, ...patch } : c)),
+    );
+
+  const buildChildrenPayload = (): Schemas["QuestionChildIn"][] =>
+    childDrafts.map((c, index) => ({
+      id: c.questionId,
+      type: "broad_written",
+      content: c.content,
+      solution: c.solution,
+      display_order: index,
+    }));
+
+  const validateChildren = (): boolean => {
+    if (childDrafts.length === 0) {
+      notifyError(new Error("Add at least one child question."), "Missing children");
+      return false;
+    }
+    let hasError = false;
+    const validated = childDrafts.map((c) => {
+      const solErr = isDocEmpty(c.solution)
+        ? "A non-empty solution is mandatory."
+        : null;
+      if (solErr || isDocEmpty(c.content)) hasError = true;
+      return { ...c, solutionError: solErr };
+    });
+    if (hasError) {
+      setChildDrafts(validated);
+      notifyError(
+        new Error("Each child question needs content and a solution."),
+        "Incomplete child question",
+      );
+    }
+    return !hasError;
+  };
 
   const save = async () => {
     if (!sectionId || !subjectId || !chapterId) {
@@ -112,29 +173,30 @@ export function QuestionEditorDrawer({
       setSolutionError("A non-empty solution is mandatory.");
       return;
     }
+    if (isPassageParent && !validateChildren()) return;
+
+    const base = {
+      section_id: sectionId,
+      subject_id: subjectId,
+      chapter_id: chapterId,
+      type,
+      content,
+      solution,
+    };
+    const children = isPassageParent ? buildChildrenPayload() : undefined;
+
     try {
       if (effectiveId) {
         await updateQuestion.mutateAsync({
           id: effectiveId,
-          body: {
-            section_id: sectionId,
-            subject_id: subjectId,
-            chapter_id: chapterId,
-            type,
-            content,
-            solution,
-          },
+          body: { ...base, ...(children ? { children } : {}) },
         });
         notifySuccess("Question saved.");
         onClose();
       } else {
         const created = await createQuestion.mutateAsync({
-          section_id: sectionId,
-          subject_id: subjectId,
-          chapter_id: chapterId,
-          type,
-          content,
-          solution,
+          ...base,
+          children: children ?? [],
         });
         setCreatedId(created.id);
         notifySuccess("Question created. You can now attach images.");
@@ -162,54 +224,30 @@ export function QuestionEditorDrawer({
         </Center>
       ) : (
         <Stack>
-          <Group grow align="flex-start">
-            <Select
-              label="Section"
-              data={sectionOptions}
-              value={sectionId}
-              onChange={(v) => {
-                setSectionId(v);
-                setSubjectId(null);
-                setChapterId(null);
-              }}
-              searchable
-              placeholder="Select section"
-            />
-            <Select
-              label="Subject"
-              data={subjectOptions}
-              value={subjectId}
-              onChange={(v) => {
-                setSubjectId(v);
-                setChapterId(null);
-              }}
-              searchable
-              disabled={!sectionId}
-              placeholder="Select subject"
-            />
-          </Group>
-          <Group grow align="flex-start">
-            <Select
-              label="Chapter"
-              data={chapterOptions}
-              value={chapterId}
-              onChange={setChapterId}
-              searchable
-              disabled={!subjectId}
-              placeholder="Select chapter"
-            />
-            <Select
-              label="Type"
-              data={QUESTION_TYPES as unknown as { value: string; label: string }[]}
-              value={type}
-              onChange={(v) => setType((v as QuestionType) ?? "broad_written")}
-              allowDeselect={false}
-            />
-          </Group>
+          <QuestionTaxonomyFields
+            sectionId={sectionId}
+            subjectId={subjectId}
+            chapterId={chapterId}
+            type={type}
+            sectionOptions={sectionOptions}
+            subjectOptions={subjectOptions}
+            chapterOptions={chapterOptions}
+            onSectionChange={(v) => {
+              setSectionId(v);
+              setSubjectId(null);
+              setChapterId(null);
+            }}
+            onSubjectChange={(v) => {
+              setSubjectId(v);
+              setChapterId(null);
+            }}
+            onChapterChange={setChapterId}
+            onTypeChange={setType}
+          />
 
           <Box>
             <Text size="sm" fw={500} mb={4}>
-              Content
+              {isPassageParent || type === "passage" ? "Passage stem" : "Content"}
             </Text>
             <QuestionRichText
               key={`content-${editorKey}`}
@@ -239,6 +277,26 @@ export function QuestionEditorDrawer({
               </Text>
             )}
           </Box>
+
+          {isPassageParent && (
+            <>
+              <Divider label="Child questions" labelPosition="left" />
+              <ChildQuestionList
+                childDrafts={childDrafts}
+                assetsByChildId={assetsByChildId}
+                onChange={patchChild}
+                onMove={(index, dir) =>
+                  setChildDrafts((prev) => moveChild(prev, index, dir))
+                }
+                onRemove={(localId) =>
+                  setChildDrafts((prev) => prev.filter((c) => c.localId !== localId))
+                }
+                onAdd={() =>
+                  setChildDrafts((prev) => [...prev, makeEmptyChild(prev.length)])
+                }
+              />
+            </>
+          )}
 
           {effectiveId && detail.data ? (
             <>

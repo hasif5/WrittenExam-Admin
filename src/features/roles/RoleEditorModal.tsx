@@ -32,8 +32,8 @@ const GROUP_LABELS: Record<string, string> = {
   taxonomy: "Taxonomy",
   question_bank: "Question Bank",
   rbac: "Roles & Permissions",
-  finance: "Finance (Phase 2)",
-  reports: "Reports (Phase 2)",
+  finance: "Finance",
+  reports: "Reports",
 };
 
 function groupPermissions(perms: PermissionOut[]): [string, PermissionOut[]][] {

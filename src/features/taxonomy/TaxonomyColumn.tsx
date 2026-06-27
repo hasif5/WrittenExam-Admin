@@ -2,7 +2,7 @@
 // selection, per-row menu (edit, activate/deactivate, usage, delete).
 // Author: Hasif Ahmed (www.hasif.info)
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -24,6 +24,7 @@ import {
   IconDotsVertical,
   IconEdit,
   IconEye,
+  IconGripVertical,
   IconPlus,
   IconToggleLeft,
   IconToggleRight,
@@ -58,6 +59,8 @@ interface TaxonomyColumnProps {
   onToggleActive: (node: TaxonomyNode) => void;
   onDelete: (node: TaxonomyNode) => void;
   onUsage?: (node: TaxonomyNode) => void;
+  /** Persist a new top-to-bottom ordering (drag-to-reorder). */
+  onReorder?: (orderedIds: string[]) => void;
 }
 
 export function TaxonomyColumn({
@@ -79,9 +82,62 @@ export function TaxonomyColumn({
   onToggleActive,
   onDelete,
   onUsage,
+  onReorder,
 }: TaxonomyColumnProps) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+
+  // Drag-to-reorder: `order` mirrors the rendered top-to-bottom ids and is
+  // reordered live while dragging, then persisted on drop. The grip handle is
+  // the sole drag source; the whole row acts as the drop / drag-over target.
+  const reorderable = Boolean(onReorder) && nodes.length > 1;
+  const [order, setOrder] = useState<string[]>(() => nodes.map((n) => n.id));
+  const [dragId, setDragId] = useState<string | null>(null);
+  const orderAtDragStart = useRef<string[]>([]);
+
+  const nodeKey = nodes.map((n) => n.id).join("|");
+  useEffect(() => {
+    if (dragId !== null) return; // don't clobber an in-progress drag
+    const ids = nodes.map((n) => n.id);
+    // Return prev when unchanged so React bails out (the parent passes a fresh
+    // [] fallback each render, which would otherwise loop).
+    setOrder((prev) =>
+      prev.length === ids.length && prev.every((id, i) => id === ids[i]) ? prev : ids,
+    );
+    // nodeKey captures id-order changes; nodes is intentionally excluded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeKey, dragId]);
+
+  const orderedNodes: TaxonomyNode[] = (dragId !== null ? order : nodes.map((n) => n.id))
+    .map((id) => nodes.find((n) => n.id === id))
+    .filter((n): n is TaxonomyNode => Boolean(n));
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.effectAllowed = "move";
+    // Drag the whole row visually even though the grip is the source.
+    const row = (e.currentTarget as HTMLElement).closest("[data-taxnode]");
+    if (row) e.dataTransfer.setDragImage(row, 12, 12);
+    orderAtDragStart.current = nodes.map((n) => n.id);
+    setOrder(orderAtDragStart.current);
+    setDragId(id);
+  };
+
+  const handleDragEnterRow = (overId: string) => {
+    if (dragId === null || dragId === overId) return;
+    setOrder((prev) => {
+      const without = prev.filter((id) => id !== dragId);
+      const targetIndex = without.indexOf(overId);
+      without.splice(targetIndex, 0, dragId);
+      return without;
+    });
+  };
+
+  const finishDrag = () => {
+    if (dragId === null) return;
+    const changed = order.some((id, i) => id !== orderAtDragStart.current[i]);
+    if (changed) onReorder?.(order);
+    setDragId(null);
+  };
 
   const submitCreate = async () => {
     if (name.trim().length === 0) return;
@@ -150,17 +206,28 @@ export function TaxonomyColumn({
           ) : (
             <ScrollArea.Autosize mah={460}>
               <Stack gap={4}>
-                {nodes.map((node) => {
+                {orderedNodes.map((node) => {
                   const selected = selectable && selectedId === node.id;
+                  const dragging = dragId === node.id;
                   return (
                     <Group
                       key={node.id}
+                      data-taxnode={node.id}
                       gap={4}
                       wrap="nowrap"
                       px="xs"
                       py={6}
+                      onDragEnter={() => handleDragEnterRow(node.id)}
+                      onDragOver={(e) => {
+                        if (dragId !== null) e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        if (dragId !== null) e.preventDefault();
+                        finishDrag();
+                      }}
                       style={{
                         borderRadius: 8,
+                        opacity: dragging ? 0.5 : 1,
                         // Theme-driven, scheme-aware brand tint (same token as
                         // variant="light"); legible in both light and dark.
                         backgroundColor: selected
@@ -168,6 +235,20 @@ export function TaxonomyColumn({
                           : undefined,
                       }}
                     >
+                      {reorderable && (
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          size="sm"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, node.id)}
+                          onDragEnd={finishDrag}
+                          style={{ cursor: "grab" }}
+                          aria-label="Drag to reorder"
+                        >
+                          <IconGripVertical size={16} opacity={0.6} />
+                        </ActionIcon>
+                      )}
                       <UnstyledButton
                         style={{ flex: 1, minWidth: 0 }}
                         onClick={() => selectable && onSelect?.(node.id)}

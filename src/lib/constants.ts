@@ -28,6 +28,9 @@ export const QUESTION_TYPES = [
 
 export type QuestionType = (typeof QUESTION_TYPES)[number]["value"];
 
+// Single source for the parent passage type so UI never hardcodes the literal.
+export const PASSAGE_WITH_CHILDREN: QuestionType = "passage_with_children";
+
 export const APPLICATION_STATUSES = [
   { value: "pending", label: "Pending" },
   { value: "approved", label: "Approved" },

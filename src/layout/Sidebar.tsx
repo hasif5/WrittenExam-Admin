@@ -1,6 +1,6 @@
 // Sidebar navigation. Renders grouped, labelled sections from the shared nav
-// model with route-driven active states; later phases are shown disabled with
-// their phase inline. Scrolling/padding is owned by the AppShell.Navbar section.
+// model with route-driven active states; not-yet-built domains are shown
+// disabled. Scrolling/padding is owned by the AppShell.Navbar section.
 // Author: Hasif Ahmed (www.hasif.info)
 
 import type { ReactNode } from "react";
@@ -75,7 +75,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <NavLink
               key={item.label}
               label={item.label}
-              description={item.phase}
               leftSection={<item.icon size={18} stroke={1.6} />}
               disabled
             />

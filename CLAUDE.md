@@ -46,7 +46,9 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
 - `components/` - shared UI (`DataTable` MRT wrapper, `PageHero`, `ErrorState`, `AssetImage`, etc.).
 - `assets/heroes/` - per-page hero banners (1K Nano Banana art, optimized to webp) + `index.ts` registry.
 - `features/` - one folder per surface (`users`, `roles`, `taxonomy`, `question-bank`,
-  `examiner-apps`, `examiners`, `deletion-queue`, `dashboard`).
+  `examiner-apps`, `examiners`, `deletion-queue`, `dashboard`). The Question Bank drawer is a
+  thin composition root (`QuestionEditorDrawer`) over extracted sub-editors
+  (`QuestionTaxonomyFields`, `ChildQuestionList`/`ChildQuestionEditor`, `childDoc.ts`).
 - `layout/` - `AppShell`, `Sidebar`, `navigation.ts` (single nav model).
 - `lib/` - `constants.ts`, `format.ts`, `notify.ts`, `confirm.ts`, `errors.ts`, `usePagination.ts`.
 
@@ -105,6 +107,17 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
 - **Mantine `Drawer`/`Modal` titles:** never pass a heading (`<Title>`) into the `title` prop - the
   wrapper already renders an `<h2>`, so a nested heading triggers `validateDOMNesting`. Use
   `<Text component="span" fw={600} fz="lg">` or a plain string.
+- **Passage with child questions (Phase 1.6):** authoring a `passage_with_children` (compared via
+  the `PASSAGE_WITH_CHILDREN` constant, never the literal) renders a reorderable list of child
+  editors below the stem; the whole tree saves in one composite create/update (children embedded in
+  the `QuestionCreate`/`QuestionUpdate` body, D5). Children carry no taxonomy selects (inherited
+  server-side, D6); each child is keyed by a stable `localId` so reorder/remove never scrambles
+  editor instances; per-child (and stem) image attach is edit-mode-only (D7). The Question Bank list
+  uses `DataTable` row expansion (`enableExpanding` + `getSubRows={(row) => row.children}`) and
+  gates New/Edit/Delete behind `useAuth().can("question_bank.write")`. `DataTable` exposes generic
+  expansion pass-throughs (`enableExpanding`/`getSubRows`/`renderDetailPanel`/`enableExpandAll`) -
+  keep table-specific logic in the page, not the wrapper. See
+  `../docs/phase-1-6-passage-child-questions-plan.md`.
 - **File header (branding) - required on every source file.** Leading `//` comment block with:
   one-line purpose, `File:` path relative to `admin/`, `Author: Hasif Ahmed <xmart@live.com>
   (www.hasif.info)`, `Created: <YYYY-MM-DD>`. Place it above any TypeScript triple-slash directive.

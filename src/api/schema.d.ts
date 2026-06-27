@@ -741,6 +741,23 @@ export interface paths {
         patch: operations["update_section_api_v1_admin_sections__section_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/sections/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder Sections */
+        post: operations["reorder_sections_api_v1_admin_sections_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/sections/{section_id}/usage": {
         parameters: {
             query?: never;
@@ -794,6 +811,23 @@ export interface paths {
         patch: operations["update_subject_api_v1_admin_subjects__subject_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/subjects/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder Subjects */
+        post: operations["reorder_subjects_api_v1_admin_subjects_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/chapters": {
         parameters: {
             query?: never;
@@ -828,6 +862,23 @@ export interface paths {
         head?: never;
         /** Update Chapter */
         patch: operations["update_chapter_api_v1_admin_chapters__chapter_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/chapters/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder Chapters */
+        post: operations["reorder_chapters_api_v1_admin_chapters_reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/questions": {
@@ -1021,6 +1072,16 @@ export interface components {
             is_active: boolean;
             /** Display Order */
             display_order: number;
+        };
+        /** ChapterReorderRequest */
+        ChapterReorderRequest: {
+            /** Ordered Ids */
+            ordered_ids: string[];
+            /**
+             * Subject Id
+             * Format: uuid
+             */
+            subject_id: string;
         };
         /** ChapterUpdate */
         ChapterUpdate: {
@@ -1337,6 +1398,36 @@ export interface components {
             /** Caption */
             caption?: string | null;
         };
+        /**
+         * QuestionChildIn
+         * @description A child sub-question of a passage. Children are always 'broad_written'
+         *     (D2, single-level nesting) and inherit the parent's taxonomy server-side
+         *     (D6), so no section/subject/chapter is collected here. `id` identifies an
+         *     existing child on a composite edit (so its row/image assets are reused);
+         *     omit it for a brand-new child.
+         */
+        QuestionChildIn: {
+            /** Id */
+            id?: string | null;
+            /**
+             * Type
+             * @default broad_written
+             */
+            type: string;
+            /** Content */
+            content: {
+                [key: string]: unknown;
+            };
+            /** Solution */
+            solution: {
+                [key: string]: unknown;
+            };
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+        };
         /** QuestionCreate */
         QuestionCreate: {
             /**
@@ -1366,6 +1457,11 @@ export interface components {
             solution: {
                 [key: string]: unknown;
             };
+            /**
+             * Children
+             * @default []
+             */
+            children: components["schemas"]["QuestionChildIn"][];
         };
         /** QuestionOut */
         QuestionOut: {
@@ -1393,6 +1489,11 @@ export interface components {
             type: string;
             /** Parent Question Id */
             parent_question_id?: string | null;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
             /** Content */
             content: {
                 [key: string]: unknown;
@@ -1406,6 +1507,11 @@ export interface components {
              * @default []
              */
             assets: components["schemas"]["QuestionAssetOut"][];
+            /**
+             * Children
+             * @default []
+             */
+            children: components["schemas"]["QuestionOut"][];
         };
         /** QuestionUpdate */
         QuestionUpdate: {
@@ -1425,6 +1531,8 @@ export interface components {
             solution?: {
                 [key: string]: unknown;
             } | null;
+            /** Children */
+            children?: components["schemas"]["QuestionChildIn"][] | null;
         };
         /** QuestionUsageOut */
         QuestionUsageOut: {
@@ -1453,6 +1561,11 @@ export interface components {
             phone: string;
             /** Message */
             message: string;
+        };
+        /** ReorderRequest */
+        ReorderRequest: {
+            /** Ordered Ids */
+            ordered_ids: string[];
         };
         /** RoleAssignRequest */
         RoleAssignRequest: {
@@ -1641,6 +1754,16 @@ export interface components {
             is_active: boolean;
             /** Display Order */
             display_order: number;
+        };
+        /** SubjectReorderRequest */
+        SubjectReorderRequest: {
+            /** Ordered Ids */
+            ordered_ids: string[];
+            /**
+             * Section Id
+             * Format: uuid
+             */
+            section_id: string;
         };
         /** SubjectUpdate */
         SubjectUpdate: {
@@ -3298,6 +3421,39 @@ export interface operations {
             };
         };
     };
+    reorder_sections_api_v1_admin_sections_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SectionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     section_usage_api_v1_admin_sections__section_id__usage_get: {
         parameters: {
             query?: never;
@@ -3459,6 +3615,39 @@ export interface operations {
             };
         };
     };
+    reorder_subjects_api_v1_admin_subjects_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubjectReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_chapters_api_v1_admin_chapters_get: {
         parameters: {
             query?: {
@@ -3589,6 +3778,39 @@ export interface operations {
             };
         };
     };
+    reorder_chapters_api_v1_admin_chapters_reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChapterReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_questions_api_v1_admin_questions_get: {
         parameters: {
             query?: {
@@ -3598,6 +3820,8 @@ export interface operations {
                 type?: string | null;
                 /** @description Keyword search over question + solution text */
                 q?: string | null;
+                /** @description List a single parent's child questions (omit for top-level) */
+                parent_id?: string | null;
                 limit?: number;
                 offset?: number;
             };

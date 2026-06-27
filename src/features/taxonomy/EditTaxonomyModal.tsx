@@ -2,13 +2,12 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useEffect, useState } from "react";
-import { Button, Group, Modal, NumberInput, Stack, Switch, TextInput } from "@mantine/core";
+import { Button, Group, Modal, Stack, Switch, TextInput } from "@mantine/core";
 
 export interface EditableNode {
   id: string;
   name: string;
   is_active: boolean;
-  display_order: number;
 }
 
 export function EditTaxonomyModal({
@@ -22,18 +21,16 @@ export function EditTaxonomyModal({
   title: string;
   saving: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; is_active: boolean; display_order: number }) => Promise<void>;
+  onSave: (data: { name: string; is_active: boolean }) => Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [active, setActive] = useState(true);
-  const [order, setOrder] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (node) {
       setName(node.name);
       setActive(node.is_active);
-      setOrder(node.display_order);
       setError(null);
     }
   }, [node]);
@@ -45,7 +42,7 @@ export function EditTaxonomyModal({
       setError("Name is required.");
       return;
     }
-    await onSave({ name: name.trim(), is_active: active, display_order: order });
+    await onSave({ name: name.trim(), is_active: active });
   };
 
   return (
@@ -59,12 +56,6 @@ export function EditTaxonomyModal({
             if (error) setError(null);
           }}
           error={error}
-        />
-        <NumberInput
-          label="Display order"
-          value={order}
-          onChange={(v) => setOrder(typeof v === "number" ? v : 0)}
-          min={0}
         />
         <Switch
           label="Active"

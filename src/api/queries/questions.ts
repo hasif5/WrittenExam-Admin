@@ -17,6 +17,7 @@ export interface QuestionFilters {
   chapter_id?: string;
   type?: QuestionType;
   q?: string;
+  parent_id?: string;
   limit: number;
   offset: number;
 }
@@ -39,6 +40,7 @@ export function useQuestions(filters: QuestionFilters) {
           chapter_id: filters.chapter_id,
           type: filters.type,
           q: filters.q,
+          parent_id: filters.parent_id,
           limit: filters.limit,
           offset: filters.offset,
         },

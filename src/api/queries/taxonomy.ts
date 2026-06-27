@@ -57,6 +57,17 @@ export function useDeleteSection() {
   });
 }
 
+export function useReorderSections() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds: string[]) =>
+      api.post<SectionOut[]>("/admin/sections/reorder", {
+        body: { ordered_ids: orderedIds },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: taxonomyKeys.sections }),
+  });
+}
+
 export function useSectionUsage(id: string | null) {
   return useQuery({
     queryKey: taxonomyKeys.sectionUsage(id ?? ""),
@@ -106,6 +117,18 @@ export function useDeleteSubject() {
   });
 }
 
+export function useReorderSubjects() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sectionId, orderedIds }: { sectionId: string; orderedIds: string[] }) =>
+      api.post<SubjectOut[]>("/admin/subjects/reorder", {
+        body: { section_id: sectionId, ordered_ids: orderedIds },
+      }),
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({ queryKey: taxonomyKeys.subjects(vars.sectionId) }),
+  });
+}
+
 // --- Chapters ---------------------------------------------------------------
 
 export function useChapters(subjectId?: string) {
@@ -144,5 +167,17 @@ export function useDeleteChapter() {
     mutationFn: (id: string) =>
       api.del<Schemas["MessageResponse"]>(`/admin/chapters/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["chapters"] }),
+  });
+}
+
+export function useReorderChapters() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subjectId, orderedIds }: { subjectId: string; orderedIds: string[] }) =>
+      api.post<ChapterOut[]>("/admin/chapters/reorder", {
+        body: { subject_id: subjectId, ordered_ids: orderedIds },
+      }),
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({ queryKey: taxonomyKeys.chapters(vars.subjectId) }),
   });
 }

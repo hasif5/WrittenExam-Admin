@@ -50,7 +50,7 @@ export function DashboardPage() {
       <PageHero
         image={HEROES.dashboard}
         title={`Welcome, ${name}`}
-        description="Phase 1 admin console. Curate examiners, taxonomy, and the question bank, and keep staff, roles, and applications moving - all from one place. Later domains (courses, evaluation, finance, reports) arrive in upcoming phases."
+        description="Curate examiners, taxonomy, and the question bank, and keep staff, roles, and applications moving - all from one place. Later domains (courses, evaluation, finance, reports) are coming soon."
       />
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
@@ -86,9 +86,9 @@ export function DashboardPage() {
               About this console
             </Text>
             <Text size="sm" c="dimmed">
-              Every screen here is wired to a real Phase 1 backend endpoint. Sidebar items marked
+              Every screen here is wired to a live backend endpoint. Sidebar items marked
               &quot;coming later&quot; are placeholders for navigation context and are intentionally
-              disabled until their backend phase ships.
+              disabled until those domains ship.
             </Text>
           </Card>
         </Grid.Col>

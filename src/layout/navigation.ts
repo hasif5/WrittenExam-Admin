@@ -37,7 +37,7 @@ export interface NavSection {
   topDivider?: boolean;
 }
 
-// Active Phase 1 surfaces, grouped for scannability.
+// Active admin surfaces, grouped for scannability.
 export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Overview",
@@ -97,16 +97,15 @@ export const NAV_SECTIONS: NavSection[] = [
 
 export interface FutureNavItem {
   label: string;
-  phase: string;
   icon: Icon;
 }
 
-// Later-phase domains shown disabled for navigation context (no screens yet).
+// Domains shown disabled for navigation context (no screens yet).
 export const FUTURE_NAV: FutureNavItem[] = [
-  { label: "Courses & Quizzes", phase: "Phase 2", icon: IconBuildingStore },
-  { label: "Evaluation", phase: "Phase 3", icon: IconChecklist },
-  { label: "Wallet & Payouts", phase: "Phase 4", icon: IconWallet },
-  { label: "Reports", phase: "Phase 6", icon: IconReportAnalytics },
+  { label: "Courses & Quizzes", icon: IconBuildingStore },
+  { label: "Evaluation", icon: IconChecklist },
+  { label: "Wallet & Payouts", icon: IconWallet },
+  { label: "Reports", icon: IconReportAnalytics },
 ];
 
 const ALL_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
