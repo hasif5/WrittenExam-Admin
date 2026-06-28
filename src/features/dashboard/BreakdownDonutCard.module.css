@@ -1,0 +1,56 @@
+/* Breakdown donut card styling: a soft tinted "well" behind the chart for depth,
+ * an absolutely-centered two-line total overlay, and interactive legend rows.
+ * All colours come from Mantine scheme-aware tokens for light/dark/colorful parity.
+ * File: src/features/dashboard/BreakdownDonutCard.module.css
+ * Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+ * Created: 2026-06-28
+ */
+
+.chartWell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  /* Subtle radial recess so the ring lifts off the card surface. */
+  background: radial-gradient(
+    circle at center,
+    var(--mantine-color-default-hover) 0%,
+    transparent 72%
+  );
+}
+
+/* Two-line total parked in the donut hole (replaces the single-line chartLabel). */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.centerValue {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.row {
+  padding: 6px 8px;
+  border-radius: var(--mantine-radius-md);
+  transition: background-color 140ms ease;
+}
+
+.row:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}

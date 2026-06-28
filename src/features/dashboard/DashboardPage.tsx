@@ -150,7 +150,7 @@ export function DashboardPage() {
         <ErrorState error={stats.error} onRetry={() => stats.refetch()} />
       ) : (
         <>
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
             {visibleStats.map((s) => (
               <StatCard
                 key={s.key}
@@ -166,10 +166,10 @@ export function DashboardPage() {
           </SimpleGrid>
 
           {(showQuestionsChart || showRosterChart) && (
-            <SimpleGrid cols={{ base: 1, lg: 2 }} mt="xl">
+            <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg" mt="xl">
               {showQuestionsChart &&
                 (stats.isLoading || !data ? (
-                  <Skeleton height={220} radius="md" />
+                  <Skeleton height={252} radius="lg" />
                 ) : (
                   <BreakdownDonutCard
                     title="Questions by type"
@@ -180,7 +180,7 @@ export function DashboardPage() {
                 ))}
               {showRosterChart &&
                 (stats.isLoading || !data ? (
-                  <Skeleton height={220} radius="md" />
+                  <Skeleton height={252} radius="lg" />
                 ) : (
                   <BreakdownDonutCard
                     title="Examiner roster by status"
