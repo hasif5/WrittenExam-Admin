@@ -1,0 +1,45 @@
+/* Shared "interactive surface" helper - the lift / accent-glow / accent-bar
+ * micro-interaction used by clickable cards (the stat tile is the reference).
+ * Opt in by adding the `surface` class to a clickable card and setting the accent
+ * via CSS vars: style={{ "--accent": "var(--mantine-color-blue-filled)",
+ * "--accent-soft": "var(--mantine-color-blue-light)" }}. Compositor-only
+ * (transform/opacity) so it stays cheap. See docs/admin-design-system.md.
+ * File: src/components/interactive.module.css
+ * Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+ * Created: 2026-06-28
+ */
+
+.surface {
+  --accent: var(--mantine-color-brand-filled);
+  --accent-soft: var(--mantine-color-brand-light);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform var(--motion-emphasis) var(--motion-ease),
+    box-shadow var(--motion-emphasis) var(--motion-ease),
+    border-color var(--motion-emphasis) var(--motion-ease);
+}
+
+/* Accent bar that wipes in on hover (a live "selected" cue). */
+.surface::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform var(--motion-emphasis) var(--motion-ease);
+}
+
+.surface:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 14px 34px -16px var(--accent-soft);
+}
+
+.surface:hover::before {
+  transform: scaleY(1);
+}

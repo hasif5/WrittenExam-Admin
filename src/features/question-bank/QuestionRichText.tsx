@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { RichTextEditor } from "@mantine/tiptap";
 import { Button, FileButton, Group, Modal, Progress, Text, TextInput } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconMathFunction, IconPhotoPlus } from "@tabler/icons-react";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -35,6 +36,9 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
   const [cropFile, setCropFile] = useState<File | null>(null);
   const upload = useUploadAsset();
   const uploading = progress !== null;
+  // Inline-code and heading (H2/H3) controls are hidden on mobile only (rarely
+  // used there; keeps the wrapped toolbar compact on small screens). Desktop keeps them.
+  const isMobile = useMediaQuery("(max-width: 48em)");
 
   const editor = useEditor({
     extensions: [
@@ -112,12 +116,12 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
             <RichTextEditor.Italic />
             <RichTextEditor.Underline />
             <RichTextEditor.Strikethrough />
-            <RichTextEditor.Code />
+            {!isMobile && <RichTextEditor.Code />}
           </RichTextEditor.ControlsGroup>
 
           <RichTextEditor.ControlsGroup>
-            <RichTextEditor.H2 />
-            <RichTextEditor.H3 />
+            {!isMobile && <RichTextEditor.H2 />}
+            {!isMobile && <RichTextEditor.H3 />}
             <RichTextEditor.BulletList />
             <RichTextEditor.OrderedList />
             <RichTextEditor.Blockquote />

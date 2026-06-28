@@ -1,0 +1,23 @@
+/* Row-level micro-interaction for every DataTable list: a smooth hover tint plus
+ * a brand accent bar on the left edge (inset shadow - cheap, one row at a time).
+ * Uses the shared motion tokens so it matches the rest of the app. Compositor-
+ * friendly: only background-color + box-shadow transition on the hovered row.
+ * File: src/components/DataTable.module.css
+ * Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+ * Created: 2026-06-28
+ */
+
+.row {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.row:hover > td {
+  background-color: var(--mantine-color-default-hover);
+}
+
+/* Brand accent bar on the leading edge of the hovered row. */
+.row:hover {
+  box-shadow: inset 3px 0 0 0 var(--mantine-color-brand-filled);
+}

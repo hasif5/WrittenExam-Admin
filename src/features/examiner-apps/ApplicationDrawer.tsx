@@ -7,7 +7,6 @@ import {
   Badge,
   Button,
   Divider,
-  Drawer,
   Group,
   Loader,
   Center,
@@ -18,6 +17,8 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconEdit, IconX } from "@tabler/icons-react";
 import { AssetImage } from "@/components/AssetImage";
+import { EditorDrawer } from "@/components/EditorDrawer";
+import { HEROES } from "@/assets/heroes";
 import { ErrorState } from "@/components/ErrorState";
 import { useApplicationDecision, useExaminerApp } from "@/api/queries/examiners";
 import { notifyError, notifySuccess } from "@/lib/notify";
@@ -82,16 +83,12 @@ export function ApplicationDrawer({
   };
 
   return (
-    <Drawer
+    <EditorDrawer
       opened={Boolean(applicationId)}
       onClose={onClose}
-      position="right"
-      size="lg"
-      title={
-        <Text component="span" fw={600} fz="lg">
-          Examiner application
-        </Text>
-      }
+      title="Examiner application"
+      caption="Review the application and decide"
+      image={HEROES.examinerAppsEditor}
     >
       {query.isLoading ? (
         <Center h={200}>
@@ -177,6 +174,6 @@ export function ApplicationDrawer({
           )}
         </Stack>
       ) : null}
-    </Drawer>
+    </EditorDrawer>
   );
 }

@@ -16,6 +16,7 @@ import {
   type MRT_RowSelectionState,
 } from "mantine-react-table";
 import { errorMessage } from "@/lib/errors";
+import classes from "./DataTable.module.css";
 
 interface DataTableProps<T extends MRT_RowData> {
   columns: MRT_ColumnDef<T>[];
@@ -132,6 +133,9 @@ export function DataTable<T extends MRT_RowData>({
       ? { placeholder: searchPlaceholder, style: { minWidth: 280 } }
       : undefined,
     mantinePaperProps: { withBorder: true, shadow: "xs" },
+    // Shared row micro-interaction (hover tint + leading accent bar) so every list
+    // page feels as alive as the dashboard cards. See DataTable.module.css.
+    mantineTableBodyRowProps: { className: classes.row },
     enableRowActions,
     renderRowActions: renderRowActions
       ? ({ row }) => renderRowActions({ row: { original: row.original } })

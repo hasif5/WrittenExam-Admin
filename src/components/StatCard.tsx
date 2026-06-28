@@ -10,6 +10,7 @@ import { Card, Group, Skeleton, Text, ThemeIcon } from "@mantine/core";
 import type { Icon } from "@tabler/icons-react";
 import { IconArrowUpRight } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
+import interactive from "./interactive.module.css";
 import classes from "./StatCard.module.css";
 
 interface StatCardProps {
@@ -40,7 +41,7 @@ export function StatCard({
       withBorder
       padding="lg"
       radius="lg"
-      className={classes.card}
+      className={`${interactive.surface} ${classes.card}`}
       style={{
         // Scheme-aware accent tokens consumed by the CSS module (border, bar,
         // watermark, glow) so the tile stays correct in light / dark / colorful.

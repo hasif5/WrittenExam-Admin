@@ -1,5 +1,7 @@
-// Create/edit a staff role + its permission bundle (grouped permission matrix).
-// The super-admin role is locked (full access); system roles are not editable.
+// Right-side drawer to create/edit a staff role + its permission bundle (grouped
+// permission matrix). The super-admin role is locked (full access); system roles
+// are not editable. Mirrors the User/Question editor drawers.
+// File: src/features/roles/RoleEditorDrawer.tsx
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useEffect, useMemo, useState } from "react";
@@ -9,7 +11,6 @@ import {
   Checkbox,
   Divider,
   Group,
-  Modal,
   Stack,
   Switch,
   Text,
@@ -17,6 +18,8 @@ import {
   Textarea,
 } from "@mantine/core";
 import { IconLock } from "@tabler/icons-react";
+import { EditorDrawer } from "@/components/EditorDrawer";
+import { HEROES } from "@/assets/heroes";
 import {
   useCreateRole,
   usePermissions,
@@ -46,7 +49,7 @@ function groupPermissions(perms: PermissionOut[]): [string, PermissionOut[]][] {
   return [...map.entries()];
 }
 
-export function RoleEditorModal({
+export function RoleEditorDrawer({
   role,
   opened,
   onClose,
@@ -119,13 +122,33 @@ export function RoleEditorModal({
 
   const busy = createRole.isPending || updateRole.isPending || setPermissions.isPending;
 
+  const caption = locked
+    ? "This role is locked"
+    : isEdit
+      ? "Adjust this role's permissions"
+      : "Bundle the permissions this role grants";
+
+  const footer = (
+    <Group justify="flex-end">
+      <Button variant="default" onClick={onClose}>
+        {locked ? "Close" : "Cancel"}
+      </Button>
+      {!locked && (
+        <Button onClick={save} loading={busy} disabled={!name.trim()}>
+          {isEdit ? "Save changes" : "Create role"}
+        </Button>
+      )}
+    </Group>
+  );
+
   return (
-    <Modal
+    <EditorDrawer
       opened={opened}
       onClose={onClose}
       title={isEdit ? `Edit role: ${role?.name}` : "Create staff role"}
-      centered
-      size="lg"
+      caption={caption}
+      image={HEROES.roleEditor}
+      footer={footer}
     >
       <Stack>
         {locked && (
@@ -181,18 +204,7 @@ export function RoleEditorModal({
             </div>
           ))}
         </Stack>
-
-        <Group justify="flex-end" mt="sm">
-          <Button variant="default" onClick={onClose}>
-            {locked ? "Close" : "Cancel"}
-          </Button>
-          {!locked && (
-            <Button onClick={save} loading={busy} disabled={!name.trim()}>
-              {isEdit ? "Save changes" : "Create role"}
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </EditorDrawer>
   );
 }

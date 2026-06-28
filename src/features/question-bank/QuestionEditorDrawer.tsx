@@ -13,12 +13,13 @@ import {
   Button,
   Center,
   Divider,
-  Drawer,
   Group,
   Loader,
   Stack,
   Text,
 } from "@mantine/core";
+import { EditorDrawer } from "@/components/EditorDrawer";
+import { HEROES } from "@/assets/heroes";
 import { QuestionRichText } from "./QuestionRichText";
 import { QuestionTaxonomyFields } from "./QuestionTaxonomyFields";
 import { ChildQuestionList } from "./ChildQuestionList";
@@ -28,7 +29,6 @@ import {
   moveChild,
   type ChildDraft,
 } from "./childDoc";
-import { useMediaQuery } from "@mantine/hooks";
 import { EMPTY_DOC, isDocEmpty, type TiptapDoc } from "./tiptapDoc";
 import { useSections, useSubjects, useChapters } from "@/api/queries/taxonomy";
 import { useCreateQuestion, useQuestion, useUpdateQuestion } from "@/api/queries/questions";
@@ -47,7 +47,6 @@ export function QuestionEditorDrawer({
   questionId,
   onClose,
 }: QuestionEditorDrawerProps) {
-  const isMobile = useMediaQuery("(max-width: 48em)");
   const detail = useQuestion(questionId);
   const sections = useSections(true);
 
@@ -193,15 +192,27 @@ export function QuestionEditorDrawer({
   };
 
   return (
-    <Drawer
+    <EditorDrawer
       opened={opened}
       onClose={onClose}
-      position="right"
-      size={isMobile ? "100%" : "xl"}
-      title={
-        <Text component="span" fw={600} fz="lg">
-          {isEdit ? "Edit question" : "New question"}
-        </Text>
+      title={isEdit ? "Edit question" : "New question"}
+      caption="Author the question, solution and any sub-questions"
+      image={HEROES.questionsEditor}
+      size="xl"
+      footer={
+        loadingDetail ? undefined : (
+          <Group justify="flex-end">
+            <Button variant="default" onClick={onClose}>
+              Close
+            </Button>
+            <Button
+              loading={createQuestion.isPending || updateQuestion.isPending}
+              onClick={save}
+            >
+              {isEdit ? "Save changes" : "Create question"}
+            </Button>
+          </Group>
+        )
       }
     >
       {loadingDetail ? (
@@ -282,20 +293,8 @@ export function QuestionEditorDrawer({
               />
             </>
           )}
-
-          <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={onClose}>
-              Close
-            </Button>
-            <Button
-              loading={createQuestion.isPending || updateQuestion.isPending}
-              onClick={save}
-            >
-              {isEdit ? "Save changes" : "Create question"}
-            </Button>
-          </Group>
         </Stack>
       )}
-    </Drawer>
+    </EditorDrawer>
   );
 }

@@ -9,7 +9,6 @@ import {
   Button,
   Center,
   Divider,
-  Drawer,
   Group,
   Loader,
   PasswordInput,
@@ -19,6 +18,8 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
+import { EditorDrawer } from "@/components/EditorDrawer";
+import { HEROES } from "@/assets/heroes";
 import {
   useResetUserPassword,
   useSetUserActive,
@@ -122,16 +123,12 @@ export function UserEditorDrawer({ opened, userId, onClose }: UserEditorDrawerPr
   };
 
   return (
-    <Drawer
+    <EditorDrawer
       opened={opened}
       onClose={onClose}
-      position="right"
-      size="lg"
-      title={
-        <Text component="span" fw={600} fz="lg">
-          User details
-        </Text>
-      }
+      title="User details"
+      caption="Profile, access and roles"
+      image={HEROES.usersEditor}
     >
       {detail.isLoading || !data ? (
         <Center h={200}>
@@ -241,6 +238,6 @@ export function UserEditorDrawer({ opened, userId, onClose }: UserEditorDrawerPr
           )}
         </Stack>
       )}
-    </Drawer>
+    </EditorDrawer>
   );
 }

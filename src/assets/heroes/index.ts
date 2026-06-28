@@ -9,12 +9,20 @@ import deletionDark from "./deletion-dark.webp";
 import deletionLight from "./deletion-light.webp";
 import examinerAppsDark from "./examiner-apps-dark.webp";
 import examinerAppsLight from "./examiner-apps-light.webp";
+import examinerAppsEditorDark from "./examiner-apps-editor-dark.webp";
+import examinerAppsEditorLight from "./examiner-apps-editor-light.webp";
 import examinersDark from "./examiners-dark.webp";
 import examinersLight from "./examiners-light.webp";
 import questionsDark from "./questions-dark.webp";
 import questionsLight from "./questions-light.webp";
+import questionsEditorDark from "./questions-editor-dark.webp";
+import questionsEditorLight from "./questions-editor-light.webp";
+import roleEditorDark from "./role-editor-dark.webp";
+import roleEditorLight from "./role-editor-light.webp";
 import rolesDark from "./roles-dark.webp";
 import rolesLight from "./roles-light.webp";
+import usersEditorDark from "./users-editor-dark.webp";
+import usersEditorLight from "./users-editor-light.webp";
 import taxonomyDark from "./taxonomy-dark.webp";
 import taxonomyLight from "./taxonomy-light.webp";
 import usersDark from "./users-dark.webp";
@@ -35,4 +43,10 @@ export const HEROES = {
   questions: { dark: questionsDark, light: questionsLight },
   roles: { dark: rolesDark, light: rolesLight },
   deletion: { dark: deletionDark, light: deletionLight },
+  // Drawer banners (motif right, empty left for the title) - one per surface that
+  // has a side drawer. Distinct from the wide full-page heroes above.
+  roleEditor: { dark: roleEditorDark, light: roleEditorLight },
+  usersEditor: { dark: usersEditorDark, light: usersEditorLight },
+  questionsEditor: { dark: questionsEditorDark, light: questionsEditorLight },
+  examinerAppsEditor: { dark: examinerAppsEditorDark, light: examinerAppsEditorLight },
 } satisfies Record<string, HeroVariants>;

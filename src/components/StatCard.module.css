@@ -1,7 +1,7 @@
-/* Modern KPI tile: gradient icon chip, faded watermark glyph, and a coloured
- * hover lift/glow. Accent colour is passed in via the --accent / --accent-soft
- * custom properties (set from the stat's Mantine colour), so light/dark/colorful
- * parity is automatic through Mantine's scheme-aware colour tokens.
+/* StatCard specifics layered on top of the shared `interactive.surface` helper
+ * (which provides the lift / accent-glow / accent-bar). This file only adds the
+ * faded watermark glyph + number/label typography. Accent colour is passed in via
+ * the --accent / --accent-soft custom properties; see interactive.module.css.
  * File: src/components/StatCard.module.css
  * Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
  * Created: 2026-06-28
@@ -9,35 +9,6 @@
 
 .card {
   position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    border-color 160ms ease;
-}
-
-/* Thin accent bar that fills in on hover, reading as a live "selected" cue. */
-.card::before {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 3px;
-  background: var(--accent);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 180ms ease;
-}
-
-.card:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-  box-shadow: 0 14px 34px -16px var(--accent-soft);
-}
-
-.card:hover::before {
-  transform: scaleY(1);
 }
 
 /* Oversized, faded glyph anchored to the bottom-right corner. Decorative only. */
@@ -49,7 +20,7 @@
   opacity: 0.1;
   pointer-events: none;
   z-index: -1;
-  transition: transform 200ms ease;
+  transition: transform var(--motion-emphasis) var(--motion-ease);
 }
 
 .card:hover .watermark {

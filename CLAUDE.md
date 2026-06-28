@@ -43,8 +43,10 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
   `RequirePermission` (route-level permission guard), `LoginPage`.
 - `app/` - `providers.tsx`, `router.tsx`, `theme.ts` (theme registry), `appearance.ts` +
   `AppearanceProvider.tsx` (appearance state), `global.css`.
-- `components/` - shared UI (`DataTable` MRT wrapper, `PageHero`, `ErrorState`, `AssetImage`, etc.).
-- `assets/heroes/` - per-page hero banners (1K Nano Banana art, optimized to webp) + `index.ts` registry.
+- `components/` - shared UI: `EditorDrawer` (**the** side-drawer standard), `DataTable` (MRT wrapper),
+  `PageHero`, `StatCard`, `ErrorState`, `AssetImage`, etc.
+- `assets/heroes/` - per-surface banners (1K art, optimized to webp) + `index.ts` registry. Two roles:
+  page heroes (`HEROES.<surface>`) and drawer banners (`HEROES.<surface>Editor`).
 - `features/` - one folder per surface (`users`, `roles`, `taxonomy`, `question-bank`,
   `examiner-apps`, `examiners`, `deletion-queue`, `dashboard`). The Question Bank drawer is a
   thin composition root (`QuestionEditorDrawer`) over extracted sub-editors
@@ -92,6 +94,35 @@ build - keep it clean. After changing backend request/response shapes, run `npm 
   (light/dark) and `[data-app-theme="colorful"]` (playful rainbow header accent, page wash, sidebar
   tint). Drive page chrome from CSS vars (`--app-shell-bg`, `--app-scrollbar-thumb`, `--login-form-bg`)
   so a new appearance only overrides variables, not component code.
+
+## Design system (follow it - do not reinvent per page)
+
+Full spec: **`../docs/admin-design-system.md`**. Read it before building or changing shared UI.
+Key rules:
+
+- **Side drawers: always use `components/EditorDrawer`.** Never hand-roll a `<Drawer>` for an
+  editor/detail panel. It provides the standard: an illustrated **banner from the top edge** with the
+  title + optional caption + close (X) floating over it (sticky top, scrim-legible in every scheme), a
+  scrolling body, and an optional **sticky-bottom footer** for the primary action. Props: `opened`,
+  `onClose`, `title` (plain string), `caption?`, `image` (**required** - a drawer banner), `size?`
+  (default `lg`), `footer?`, `children`. The four existing drawers (role, user, question, examiner
+  application) use it. Use a `footer` only for a drawer-wide action set; keep contextual/per-section
+  buttons inline (pass no footer). Modals (confirms, single-field dialogs) stay modals and get no banner.
+- **Imagery:** every drawer gets a dedicated banner `HEROES.<surface>Editor` (motif right, empty
+  left for the title). Generate per the pipeline in the design-system doc - cheapest Imagen model,
+  `imageSize: "1K"`, no hex in the prompt, dark+light, optimized to webp (~10KB). See [[image-generation-cheap-lowres]].
+- **Other primitives:** `PageHero` (every page top), `StatCard` (KPI tiles), `BreakdownDonutCard`
+  (composition donuts), `DataTable`/`ErrorState`/`AssetImage`. Reuse; do not re-implement.
+- **Motion & micro-interactions:** use the motion tokens (`--motion-fast`, `--motion-emphasis`,
+  `--motion-ease` in `app/global.css`), never ad-hoc ms values. App-wide interactions (nav slide,
+  button press, row tint) live in `global.css`; clickable cards opt in to the shared
+  `components/interactive.module.css` `surface` class (lift + accent glow + accent bar) with
+  `--accent`/`--accent-soft` set from their colour (`StatCard` is the reference). Animate **only**
+  `transform`/`opacity` (+ cheap colour tints); no JS anim libs, no `backdrop-filter`, no persistent
+  `will-change`; always honor `prefers-reduced-motion`.
+- **Colour-scheme parity + tokens:** drive all colours from scheme-aware Mantine tokens
+  (`--mantine-color-{body,default,default-hover,default-border}`, `-{color}-{filled,light}`), never
+  hardcoded hex in component bodies; component hover/animation goes in a co-located CSS module.
 
 ## Conventions
 

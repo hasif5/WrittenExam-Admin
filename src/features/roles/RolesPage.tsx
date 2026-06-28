@@ -22,7 +22,7 @@ import { HEROES } from "@/assets/heroes";
 import { ErrorState } from "@/components/ErrorState";
 import { useRbacRoles } from "@/api/queries/rbac";
 import type { RoleDetailOut } from "@/api/types";
-import { RoleEditorModal } from "./RoleEditorModal";
+import { RoleEditorDrawer } from "./RoleEditorDrawer";
 
 function RoleTypeBadge({ role }: { role: RoleDetailOut }) {
   if (role.is_full_access) return <Badge color="red" variant="light">Super admin</Badge>;
@@ -132,7 +132,7 @@ export function RolesPage() {
         </Paper>
       )}
 
-      <RoleEditorModal role={editing} opened={editorOpened} onClose={editorHandlers.close} />
+      <RoleEditorDrawer role={editing} opened={editorOpened} onClose={editorHandlers.close} />
     </>
   );
 }

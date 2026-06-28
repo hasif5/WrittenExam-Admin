@@ -11,6 +11,13 @@
 :root {
   --app-shell-bg: var(--mantine-color-body);
   --app-scrollbar-thumb: var(--mantine-color-gray-5);
+
+  /* Motion tokens - one set of timings/easing every interaction shares, so the UI
+   * feels cohesive. Only transform/opacity are animated with these (compositor-
+   * only = no layout/paint, no main-thread cost). See docs/admin-design-system.md. */
+  --motion-fast: 150ms;
+  --motion-emphasis: 200ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 [data-mantine-color-scheme="light"] {
@@ -102,4 +109,52 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--app-scrollbar-thumb) transparent;
+}
+
+/* ---------------------------------------------------------------------------
+ * Motion & interaction (app-wide micro-interactions).
+ * Compositor-only (transform/opacity) + cheap colour transitions; one element
+ * reacts at a time. No JS, no will-change, no backdrop-filter. See the design
+ * system doc for the full standard.
+ * ------------------------------------------------------------------------- */
+
+/* Sidebar nav rows: smooth hover with a subtle slide toward the content. */
+.mantine-NavLink-root {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+.mantine-NavLink-root:hover {
+  transform: translateX(2px);
+}
+
+/* Buttons + action icons: shared easing + a faint tactile press. */
+.mantine-Button-root,
+.mantine-ActionIcon-root {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+.mantine-Button-root:active,
+.mantine-ActionIcon-root:active {
+  transform: translateY(1px);
+}
+
+/* Table rows: smooth hover tint (background only - cheap, one row at a time). */
+.mantine-Table-tbody .mantine-Table-tr {
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+/* Respect reduced-motion: collapse all transitions/animations to instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
