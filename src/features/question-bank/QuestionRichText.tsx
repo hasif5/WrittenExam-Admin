@@ -29,23 +29,52 @@ interface QuestionRichTextProps {
 export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionRichTextProps) {
   const [mathOpen, setMathOpen] = useState(false);
   const [latex, setLatex] = useState("");
+  // null = inserting a new equation; a number = editing the node at that position.
+  const [editPos, setEditPos] = useState<number | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const upload = useUploadAsset();
   const uploading = progress !== null;
 
   const editor = useEditor({
-    extensions: [StarterKit, Link, InlineMath, AssetImageNode],
+    extensions: [
+      StarterKit,
+      Link,
+      InlineMath.configure({
+        onEdit: (pos, existing) => {
+          setLatex(existing);
+          setEditPos(pos);
+          setMathOpen(true);
+        },
+      }),
+      AssetImageNode,
+    ],
     content: value ?? EMPTY_DOC,
     onUpdate: ({ editor }) => onChange(editor.getJSON() as TiptapDoc),
   });
 
-  const insertMath = () => {
-    if (editor && latex.trim()) {
-      editor.chain().focus().insertMath(latex.trim()).run();
-    }
+  const openInsertMath = () => {
     setLatex("");
+    setEditPos(null);
+    setMathOpen(true);
+  };
+
+  const closeMath = () => {
+    setLatex("");
+    setEditPos(null);
     setMathOpen(false);
+  };
+
+  const submitMath = () => {
+    const next = latex.trim();
+    if (editor && next) {
+      if (editPos !== null) {
+        editor.chain().focus().updateMath(editPos, next).run();
+      } else {
+        editor.chain().focus().insertMath(next).run();
+      }
+    }
+    closeMath();
   };
 
   const pickImage = (file: File | null) => {
@@ -101,9 +130,9 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
 
           <RichTextEditor.ControlsGroup>
             <RichTextEditor.Control
-              onClick={() => setMathOpen(true)}
+              onClick={openInsertMath}
               aria-label="Insert math"
-              title="Insert LaTeX math"
+              title="Insert LaTeX math (double-click an equation to edit it)"
             >
               <IconMathFunction size={16} />
             </RichTextEditor.Control>
@@ -141,7 +170,12 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
         <RichTextEditor.Content style={{ minHeight }} />
       </RichTextEditor>
 
-      <Modal opened={mathOpen} onClose={() => setMathOpen(false)} title="Insert LaTeX" centered>
+      <Modal
+        opened={mathOpen}
+        onClose={closeMath}
+        title={editPos !== null ? "Edit LaTeX" : "Insert LaTeX"}
+        centered
+      >
         <Text size="sm" c="dimmed" mb="xs">
           Enter LaTeX source (rendered with KaTeX). Example: <code>x^2 + y^2 = z^2</code>
         </Text>
@@ -152,16 +186,16 @@ export function QuestionRichText({ value, onChange, minHeight = 160 }: QuestionR
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              insertMath();
+              submitMath();
             }
           }}
           data-autofocus
         />
         <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={() => setMathOpen(false)}>
+          <Button variant="default" onClick={closeMath}>
             Cancel
           </Button>
-          <Button onClick={insertMath}>Insert</Button>
+          <Button onClick={submitMath}>{editPos !== null ? "Update" : "Insert"}</Button>
         </Group>
       </Modal>
 
