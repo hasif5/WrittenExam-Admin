@@ -30,19 +30,21 @@
  * blocks so it wins on the shared <html> element. */
 [data-app-theme="colorful"] {
   --app-shell-bg: transparent;
-  --app-scrollbar-thumb: var(--mantine-color-rainbow-4);
+  --app-scrollbar-thumb: var(--mantine-color-rainbow-6);
   /* Let the playful page wash show through the login form panel. */
   --login-form-bg: transparent;
 }
 
 [data-app-theme="colorful"] body {
-  background-color: #f3eefc;
+  background-color: #efe2fb;
   background-attachment: fixed;
+  /* Saturated corner glows - content sits in solid white cards, so the wash can
+   * be bold without hurting legibility. */
   background-image:
-    radial-gradient(800px circle at 0% 0%, rgba(255, 105, 180, 0.30), transparent 50%),
-    radial-gradient(800px circle at 100% 0%, rgba(90, 150, 255, 0.30), transparent 50%),
-    radial-gradient(700px circle at 100% 100%, rgba(255, 196, 84, 0.26), transparent 50%),
-    radial-gradient(900px circle at 50% 110%, rgba(95, 220, 170, 0.28), transparent 50%);
+    radial-gradient(820px circle at 0% 0%, rgba(255, 46, 142, 0.55), transparent 52%),
+    radial-gradient(820px circle at 100% 0%, rgba(46, 124, 255, 0.55), transparent 52%),
+    radial-gradient(720px circle at 100% 100%, rgba(255, 168, 20, 0.5), transparent 52%),
+    radial-gradient(920px circle at 50% 110%, rgba(28, 206, 142, 0.52), transparent 52%);
 }
 
 [data-app-theme="colorful"] .mantine-AppShell-main {
@@ -52,21 +54,21 @@
 [data-app-theme="colorful"] .mantine-AppShell-header {
   background-image: linear-gradient(
     90deg,
-    rgba(255, 95, 143, 0.12),
-    rgba(255, 138, 61, 0.12),
-    rgba(77, 208, 122, 0.12),
-    rgba(74, 168, 255, 0.12),
-    rgba(155, 92, 255, 0.12)
+    rgba(255, 95, 143, 0.32),
+    rgba(255, 138, 61, 0.32),
+    rgba(77, 208, 122, 0.32),
+    rgba(74, 168, 255, 0.32),
+    rgba(155, 92, 255, 0.32)
   );
-  border-bottom: 3px solid transparent;
+  border-bottom: 4px solid transparent;
   border-image: linear-gradient(
       90deg,
-      #ff5f8f,
-      #ff8a3d,
-      #ffd23d,
-      #4dd07a,
-      #4aa8ff,
-      #9b5cff
+      #ff2e8e,
+      #ff7a1a,
+      #ffc400,
+      #1ece8e,
+      #2e7cff,
+      #b934e3
     )
     1;
 }
@@ -74,8 +76,8 @@
 [data-app-theme="colorful"] .mantine-AppShell-navbar {
   background-image: linear-gradient(
     180deg,
-    rgba(255, 105, 180, 0.08),
-    rgba(120, 160, 255, 0.08)
+    rgba(255, 46, 142, 0.22),
+    rgba(46, 124, 255, 0.22)
   );
 }
 
