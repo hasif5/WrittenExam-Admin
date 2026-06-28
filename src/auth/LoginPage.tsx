@@ -1,4 +1,6 @@
-// Staff login page (email + password) with a two-panel branded layout.
+// Staff login (email + password): split-screen branded hero + a focused sign-in
+// card. Hero collapses on small screens; the form keeps its own brand lockup so
+// the page stays branded everywhere.
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useState } from "react";
@@ -10,17 +12,18 @@ import {
   Box,
   Button,
   Group,
-  Paper,
   PasswordInput,
   Stack,
   Text,
   TextInput,
+  ThemeIcon,
   Title,
 } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { IconAlertCircle, IconChecks } from "@tabler/icons-react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import { errorMessage } from "@/lib/errors";
+import { BrandMark } from "@/components/BrandMark";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import loginHero from "@/assets/login-hero.webp";
 
@@ -33,6 +36,81 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 interface LocationState {
   from?: { pathname?: string };
+}
+
+const HIGHLIGHTS = ["Examiner roster", "Question bank", "Taxonomy"];
+
+function BrandPanel() {
+  return (
+    <Box
+      visibleFrom="md"
+      style={{
+        position: "relative",
+        flex: "1 1 0",
+        backgroundImage: `url(${loginHero})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <Box
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(155deg, rgba(28,32,86,0.55) 0%, rgba(24,18,64,0.62) 55%, rgba(12,10,38,0.82) 100%)",
+        }}
+      />
+      <Group
+        style={{ position: "absolute", top: 36, left: 40, right: 40 }}
+        justify="flex-start"
+      >
+        <ThemeIcon
+          size={38}
+          radius="md"
+          variant="gradient"
+          gradient={{ from: "brand.4", to: "brand.7", deg: 135 }}
+        >
+          <IconChecks size={22} stroke={1.8} />
+        </ThemeIcon>
+        <Text fw={700} c="white" fz="lg">
+          Written Evaluation
+        </Text>
+      </Group>
+
+      <Stack
+        gap="md"
+        style={{ position: "absolute", left: 40, right: 40, bottom: 44, color: "#fff" }}
+      >
+        <Title order={1} c="white" fw={700} style={{ fontSize: 34, lineHeight: 1.15, maxWidth: 460 }}>
+          Run written-exam evaluation from one console.
+        </Title>
+        <Text fz="md" style={{ color: "rgba(255,255,255,0.82)", maxWidth: 460 }}>
+          Curate examiners, manage the question bank and taxonomy, and keep applications
+          moving - all in one place.
+        </Text>
+        <Group gap="xs" mt={4}>
+          {HIGHLIGHTS.map((label) => (
+            <Text
+              key={label}
+              fz="xs"
+              fw={500}
+              c="white"
+              px="sm"
+              py={4}
+              style={{
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.14)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+              {label}
+            </Text>
+          ))}
+        </Group>
+      </Stack>
+    </Box>
+  );
 }
 
 export function LoginPage() {
@@ -68,39 +146,8 @@ export function LoginPage() {
 
   return (
     <Box style={{ display: "flex", minHeight: "100vh" }}>
-      {/* Brand panel (hidden on small screens). */}
-      <Box
-        visibleFrom="md"
-        style={{
-          position: "relative",
-          flex: "1 1 0",
-          backgroundImage: `url(${loginHero})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <Box
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(40,46,110,0.30) 0%, rgba(40,30,90,0.55) 100%)",
-          }}
-        />
-        <Stack
-          gap={6}
-          style={{ position: "absolute", left: 40, bottom: 40, right: 40, color: "#fff" }}
-        >
-          <Title order={2} c="white">
-            Engineer&apos;s Written Evaluation Platform
-          </Title>
-          <Text size="sm" style={{ color: "rgba(255,255,255,0.85)" }}>
-            Curate examiners, taxonomy, and the question bank from one console.
-          </Text>
-        </Stack>
-      </Box>
+      <BrandPanel />
 
-      {/* Form panel. */}
       <Box
         style={{
           flex: "1 1 0",
@@ -111,71 +158,71 @@ export function LoginPage() {
           backgroundColor: "var(--login-form-bg, var(--mantine-color-body))",
         }}
       >
-        <Box w={400} maw="92vw">
-          <Group justify="space-between" align="flex-start" mb="lg">
-            <Stack gap={2}>
-              <Title order={2}>Admin Panel</Title>
-              <Text c="dimmed" size="sm">
-                Sign in to continue
-              </Text>
-            </Stack>
+        <Stack w={400} maw="92vw" gap="xl">
+          <Group justify="space-between" align="center">
+            <BrandMark />
             <ThemeSwitcher />
           </Group>
 
-          <Paper withBorder shadow="sm" p="xl" radius="md">
-            <form onSubmit={onSubmit} noValidate>
-              <Stack>
-                {submitError && (
-                  <Alert
-                    icon={<IconAlertCircle size={16} />}
-                    color="red"
-                    variant="light"
-                    title="Sign-in failed"
-                  >
-                    {submitError}
-                  </Alert>
+          <Stack gap={4}>
+            <Title order={2} fw={700}>
+              Welcome back
+            </Title>
+            <Text c="dimmed" size="sm">
+              Sign in to continue to the admin console.
+            </Text>
+          </Stack>
+
+          <form onSubmit={onSubmit} noValidate>
+            <Stack gap="md">
+              {submitError && (
+                <Alert
+                  icon={<IconAlertCircle size={16} />}
+                  color="red"
+                  variant="light"
+                  title="Sign-in failed"
+                >
+                  {submitError}
+                </Alert>
+              )}
+
+              <Controller
+                control={control}
+                name="email"
+                render={({ field }) => (
+                  <TextInput
+                    {...field}
+                    label="Email"
+                    placeholder="staff@example.com"
+                    autoComplete="username"
+                    size="md"
+                    error={errors.email?.message}
+                    data-autofocus
+                  />
                 )}
+              />
 
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field }) => (
-                    <TextInput
-                      {...field}
-                      label="Email"
-                      placeholder="staff@example.com"
-                      autoComplete="username"
-                      error={errors.email?.message}
-                      data-autofocus
-                    />
-                  )}
-                />
+              <Controller
+                control={control}
+                name="password"
+                render={({ field }) => (
+                  <PasswordInput
+                    {...field}
+                    label="Password"
+                    placeholder="Your password"
+                    autoComplete="current-password"
+                    size="md"
+                    error={errors.password?.message}
+                  />
+                )}
+              />
 
-                <Controller
-                  control={control}
-                  name="password"
-                  render={({ field }) => (
-                    <PasswordInput
-                      {...field}
-                      label="Password"
-                      placeholder="Your password"
-                      autoComplete="current-password"
-                      error={errors.password?.message}
-                    />
-                  )}
-                />
-
-                <Button type="submit" fullWidth mt="sm" loading={isSubmitting}>
-                  Sign in
-                </Button>
-              </Stack>
-            </form>
-          </Paper>
-
-          <Text c="dimmed" size="xs" ta="center" mt="md">
-            Staff access only (admin / finance).
-          </Text>
-        </Box>
+              <Button type="submit" fullWidth mt="xs" size="md" loading={isSubmitting}>
+                Sign in
+              </Button>
+            </Stack>
+          </form>
+        </Stack>
       </Box>
     </Box>
   );
