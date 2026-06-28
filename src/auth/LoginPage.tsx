@@ -25,7 +25,55 @@ import { useAuth } from "./useAuth";
 import { errorMessage } from "@/lib/errors";
 import { BrandMark } from "@/components/BrandMark";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import loginHero from "@/assets/login-hero.webp";
+import { useAppearance } from "@/app/appearance";
+import type { Appearance } from "@/app/theme";
+import loginHeroDark from "@/assets/login-hero-dark.webp";
+import loginHeroLight from "@/assets/login-hero-light.webp";
+import loginHeroColorful from "@/assets/login-hero-colorful.webp";
+
+// One blended hero per appearance so the brand panel matches the active theme.
+const LOGIN_HERO: Record<Appearance, string> = {
+  light: loginHeroLight,
+  dark: loginHeroDark,
+  colorful: loginHeroColorful,
+};
+
+// Scrim + foreground tuned per hero: dark heroes carry white text over a dark
+// scrim; the airy light hero needs dark text over a soft light scrim to stay legible.
+interface PanelStyle {
+  scrim: string;
+  fg: string;
+  sub: string;
+  pillBg: string;
+  pillBorder: string;
+}
+
+const PANEL: Record<Appearance, PanelStyle> = {
+  dark: {
+    scrim:
+      "linear-gradient(155deg, rgba(28,32,86,0.45) 0%, rgba(24,18,64,0.55) 55%, rgba(12,10,38,0.80) 100%)",
+    fg: "#ffffff",
+    sub: "rgba(255,255,255,0.82)",
+    pillBg: "rgba(255,255,255,0.14)",
+    pillBorder: "rgba(255,255,255,0.20)",
+  },
+  colorful: {
+    scrim:
+      "linear-gradient(160deg, rgba(18,12,40,0.20) 0%, rgba(18,12,40,0.28) 55%, rgba(10,8,28,0.60) 100%)",
+    fg: "#ffffff",
+    sub: "rgba(255,255,255,0.90)",
+    pillBg: "rgba(255,255,255,0.18)",
+    pillBorder: "rgba(255,255,255,0.30)",
+  },
+  light: {
+    scrim:
+      "linear-gradient(160deg, rgba(255,255,255,0.04) 0%, rgba(231,236,255,0.18) 55%, rgba(49,74,156,0.16) 100%)",
+    fg: "#1e2547",
+    sub: "rgba(30,37,71,0.74)",
+    pillBg: "rgba(49,74,156,0.10)",
+    pillBorder: "rgba(49,74,156,0.24)",
+  },
+};
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
@@ -40,26 +88,20 @@ interface LocationState {
 
 const HIGHLIGHTS = ["Examiner roster", "Question bank", "Taxonomy"];
 
-function BrandPanel() {
+function BrandPanel({ appearance }: { appearance: Appearance }) {
+  const cfg = PANEL[appearance];
   return (
     <Box
       visibleFrom="md"
       style={{
         position: "relative",
         flex: "1 1 0",
-        backgroundImage: `url(${loginHero})`,
+        backgroundImage: `url(${LOGIN_HERO[appearance]})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      <Box
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(155deg, rgba(28,32,86,0.55) 0%, rgba(24,18,64,0.62) 55%, rgba(12,10,38,0.82) 100%)",
-        }}
-      />
+      <Box style={{ position: "absolute", inset: 0, background: cfg.scrim }} />
       <Group
         style={{ position: "absolute", top: 36, left: 40, right: 40 }}
         justify="flex-start"
@@ -72,19 +114,16 @@ function BrandPanel() {
         >
           <IconChecks size={22} stroke={1.8} />
         </ThemeIcon>
-        <Text fw={700} c="white" fz="lg">
+        <Text fw={700} fz="lg" style={{ color: cfg.fg }}>
           Written Evaluation
         </Text>
       </Group>
 
-      <Stack
-        gap="md"
-        style={{ position: "absolute", left: 40, right: 40, bottom: 44, color: "#fff" }}
-      >
-        <Title order={1} c="white" fw={700} style={{ fontSize: 34, lineHeight: 1.15, maxWidth: 460 }}>
+      <Stack gap="md" style={{ position: "absolute", left: 40, right: 40, bottom: 44 }}>
+        <Title order={1} fw={700} style={{ fontSize: 34, lineHeight: 1.15, maxWidth: 460, color: cfg.fg }}>
           Run written-exam evaluation from one console.
         </Title>
-        <Text fz="md" style={{ color: "rgba(255,255,255,0.82)", maxWidth: 460 }}>
+        <Text fz="md" style={{ color: cfg.sub, maxWidth: 460 }}>
           Curate examiners, manage the question bank and taxonomy, and keep applications
           moving - all in one place.
         </Text>
@@ -94,13 +133,13 @@ function BrandPanel() {
               key={label}
               fz="xs"
               fw={500}
-              c="white"
               px="sm"
               py={4}
               style={{
+                color: cfg.fg,
                 borderRadius: 999,
-                background: "rgba(255,255,255,0.14)",
-                border: "1px solid rgba(255,255,255,0.18)",
+                background: cfg.pillBg,
+                border: `1px solid ${cfg.pillBorder}`,
                 backdropFilter: "blur(2px)",
               }}
             >
@@ -115,6 +154,7 @@ function BrandPanel() {
 
 export function LoginPage() {
   const { status, login } = useAuth();
+  const { appearance } = useAppearance();
   const navigate = useNavigate();
   const location = useLocation();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -146,7 +186,7 @@ export function LoginPage() {
 
   return (
     <Box style={{ display: "flex", minHeight: "100vh" }}>
-      <BrandPanel />
+      <BrandPanel appearance={appearance} />
 
       <Box
         style={{
