@@ -21,6 +21,17 @@
 [data-mantine-color-scheme="dark"] {
   --app-shell-bg: var(--mantine-color-dark-8);
   --app-scrollbar-thumb: var(--mantine-color-dark-3);
+  /* Cursor/VS Code "Dark Modern" panel grey for the chrome (sidebar + header),
+   * so they read as distinct panels instead of a near-black void. The recessed
+   * main area (--app-shell-bg) stays darker so bordered cards still lift off it. */
+  --app-chrome-bg: #181818;
+}
+
+/* Dark-scheme chrome only: the Colorful appearance rides the light scheme and
+ * keeps its own gradient navbar/header, so it is unaffected by these rules. */
+[data-mantine-color-scheme="dark"] .mantine-AppShell-navbar,
+[data-mantine-color-scheme="dark"] .mantine-AppShell-header {
+  background-color: var(--app-chrome-bg);
 }
 
 /* Colorful mode rides on the light colour scheme but paints playful rainbow
