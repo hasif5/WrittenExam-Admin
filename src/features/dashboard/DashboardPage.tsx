@@ -1,11 +1,12 @@
-// Dashboard: live operational stats (permission-gated) that double as shortcuts
-// into each surface, plus a short orientation note. Counts come from the existing
-// list endpoints (limit=1, read total) so no dedicated analytics endpoint is needed.
+// Dashboard: one permission-aware GraphQL round trip (useDashboardStats) powers
+// the live stat tiles plus two composition donut charts. Each tile/chart is gated
+// on the operator's permission so it doubles as a shortcut into a surface they can
+// actually reach. Counts come from the scoped /graphql reporting endpoint.
 // File: src/features/dashboard/DashboardPage.tsx
 // Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
 // Created: 2026-06-26
 
-import { Card, SimpleGrid, Text } from "@mantine/core";
+import { Card, SimpleGrid, Skeleton, Text } from "@mantine/core";
 import {
   IconBook2,
   IconClipboardList,
@@ -18,118 +19,114 @@ import {
 import { useAuth } from "@/auth/useAuth";
 import { PageHero } from "@/components/PageHero";
 import { StatCard } from "@/components/StatCard";
+import { ErrorState } from "@/components/ErrorState";
 import { HEROES } from "@/assets/heroes";
-import { useExaminerApps, useExaminerRoster } from "@/api/queries/examiners";
-import { useDeletionQueue, useUsers } from "@/api/queries/users";
-import { useQuestions } from "@/api/queries/questions";
+import { QUESTION_TYPES, ROSTER_STATUSES } from "@/lib/constants";
+import { useDashboardStats, type DashboardStats } from "@/api/queries/dashboard";
+import { BreakdownDonutCard } from "./BreakdownDonutCard";
 
-interface StatView {
+type ScalarField = Extract<
+  keyof DashboardStats,
+  | "pendingApplications"
+  | "activeExaminers"
+  | "frontendUsers"
+  | "staffUsers"
+  | "questions"
+  | "deletionQueue"
+>;
+
+interface StatMeta {
   key: string;
   permission: string;
   label: string;
   to: string;
   icon: Icon;
-  color?: string;
-  hint?: string;
-  value: number | undefined;
-  isLoading: boolean;
-  isError: boolean;
+  color: string;
+  hint: string;
+  field: ScalarField;
 }
 
-const ONE = { limit: 1, offset: 0 };
+const STAT_META: StatMeta[] = [
+  {
+    key: "pending-apps",
+    permission: "examiner_apps.review",
+    label: "Pending applications",
+    to: "/examiner-applications",
+    icon: IconClipboardList,
+    color: "yellow",
+    hint: "Awaiting review",
+    field: "pendingApplications",
+  },
+  {
+    key: "roster",
+    permission: "examiners.manage",
+    label: "Active examiners",
+    to: "/examiners",
+    icon: IconUserCheck,
+    color: "teal",
+    hint: "On the roster",
+    field: "activeExaminers",
+  },
+  {
+    key: "frontend-users",
+    permission: "users.read",
+    label: "Frontend users",
+    to: "/users",
+    icon: IconDeviceMobile,
+    color: "blue",
+    hint: "Students, examiners, pool",
+    field: "frontendUsers",
+  },
+  {
+    key: "staff-users",
+    permission: "users.read",
+    label: "Staff & admins",
+    to: "/users",
+    icon: IconShieldCog,
+    color: "grape",
+    hint: "Admin-panel accounts",
+    field: "staffUsers",
+  },
+  {
+    key: "questions",
+    permission: "question_bank.read",
+    label: "Questions",
+    to: "/questions",
+    icon: IconBook2,
+    color: "indigo",
+    hint: "In the question bank",
+    field: "questions",
+  },
+  {
+    key: "deletions",
+    permission: "deletion_queue.review",
+    label: "Deletion queue",
+    to: "/users/deletion-queue",
+    icon: IconTrash,
+    color: "red",
+    hint: "Within grace window",
+    field: "deletionQueue",
+  },
+];
+
+const QUESTION_TYPE_LABELS = Object.fromEntries(
+  QUESTION_TYPES.map((t) => [t.value, t.label]),
+);
+const ROSTER_STATUS_LABELS = Object.fromEntries(
+  ROSTER_STATUSES.map((s) => [s.value, s.label]),
+);
 
 export function DashboardPage() {
   const { me, can } = useAuth();
   const name = me?.full_name || me?.user.email || "there";
 
-  // Each count is gated on the operator's permission so we never fire a request
-  // they are not allowed to make; limit=1 keeps the payload to a single row.
-  const pendingApps = useExaminerApps(
-    { status: "pending", ...ONE },
-    can("examiner_apps.review"),
-  );
-  const roster = useExaminerRoster({ status: "active", ...ONE }, can("examiners.manage"));
-  const frontendUsers = useUsers({ ...ONE, userType: "frontend" }, can("users.read"));
-  const staffUsers = useUsers({ ...ONE, userType: "staff" }, can("users.read"));
-  const questions = useQuestions(ONE, can("question_bank.read"));
-  const deletions = useDeletionQueue(can("deletion_queue.review"));
+  const visibleStats = STAT_META.filter((s) => can(s.permission));
+  // No network call for an operator who manages nothing (preserves prior behavior).
+  const stats = useDashboardStats(visibleStats.length > 0);
+  const data = stats.data;
 
-  const stats: StatView[] = [
-    {
-      key: "pending-apps",
-      permission: "examiner_apps.review",
-      label: "Pending applications",
-      to: "/examiner-applications",
-      icon: IconClipboardList,
-      color: "yellow",
-      hint: "Awaiting review",
-      value: pendingApps.data?.total,
-      isLoading: pendingApps.isLoading,
-      isError: pendingApps.isError,
-    },
-    {
-      key: "roster",
-      permission: "examiners.manage",
-      label: "Active examiners",
-      to: "/examiners",
-      icon: IconUserCheck,
-      color: "teal",
-      hint: "On the roster",
-      value: roster.data?.total,
-      isLoading: roster.isLoading,
-      isError: roster.isError,
-    },
-    {
-      key: "frontend-users",
-      permission: "users.read",
-      label: "Frontend users",
-      to: "/users",
-      icon: IconDeviceMobile,
-      color: "blue",
-      hint: "Students, examiners, pool",
-      value: frontendUsers.data?.total,
-      isLoading: frontendUsers.isLoading,
-      isError: frontendUsers.isError,
-    },
-    {
-      key: "staff-users",
-      permission: "users.read",
-      label: "Staff & admins",
-      to: "/users",
-      icon: IconShieldCog,
-      color: "grape",
-      hint: "Admin-panel accounts",
-      value: staffUsers.data?.total,
-      isLoading: staffUsers.isLoading,
-      isError: staffUsers.isError,
-    },
-    {
-      key: "questions",
-      permission: "question_bank.read",
-      label: "Questions",
-      to: "/questions",
-      icon: IconBook2,
-      color: "indigo",
-      hint: "In the question bank",
-      value: questions.data?.total,
-      isLoading: questions.isLoading,
-      isError: questions.isError,
-    },
-    {
-      key: "deletions",
-      permission: "deletion_queue.review",
-      label: "Deletion queue",
-      to: "/users/deletion-queue",
-      icon: IconTrash,
-      color: "red",
-      hint: "Within grace window",
-      value: deletions.data?.length,
-      isLoading: deletions.isLoading,
-      isError: deletions.isError,
-    },
-  ];
-
-  const visible = stats.filter((s) => can(s.permission));
+  const showQuestionsChart = can("question_bank.read");
+  const showRosterChart = can("examiners.manage");
 
   return (
     <>
@@ -139,23 +136,7 @@ export function DashboardPage() {
         description="A live snapshot of the surfaces you manage. Select any tile to jump straight in. Later domains (courses, evaluation, finance, reports) are coming soon."
       />
 
-      {visible.length > 0 ? (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-          {visible.map((s) => (
-            <StatCard
-              key={s.key}
-              label={s.label}
-              value={s.value}
-              icon={s.icon}
-              to={s.to}
-              color={s.color}
-              hint={s.hint}
-              isLoading={s.isLoading}
-              isError={s.isError}
-            />
-          ))}
-        </SimpleGrid>
-      ) : (
+      {visibleStats.length === 0 ? (
         <Card withBorder radius="md" padding="lg">
           <Text fw={600} mb={4}>
             Welcome aboard
@@ -165,6 +146,52 @@ export function DashboardPage() {
             can grant permissions from Roles &amp; Permissions.
           </Text>
         </Card>
+      ) : stats.isError ? (
+        <ErrorState error={stats.error} onRetry={() => stats.refetch()} />
+      ) : (
+        <>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+            {visibleStats.map((s) => (
+              <StatCard
+                key={s.key}
+                label={s.label}
+                value={data ? (data[s.field] ?? 0) : undefined}
+                icon={s.icon}
+                to={s.to}
+                color={s.color}
+                hint={s.hint}
+                isLoading={stats.isLoading}
+              />
+            ))}
+          </SimpleGrid>
+
+          {(showQuestionsChart || showRosterChart) && (
+            <SimpleGrid cols={{ base: 1, lg: 2 }} mt="xl">
+              {showQuestionsChart &&
+                (stats.isLoading || !data ? (
+                  <Skeleton height={220} radius="md" />
+                ) : (
+                  <BreakdownDonutCard
+                    title="Questions by type"
+                    hint="Top-level questions in the bank"
+                    buckets={data.questionsByType ?? []}
+                    labelMap={QUESTION_TYPE_LABELS}
+                  />
+                ))}
+              {showRosterChart &&
+                (stats.isLoading || !data ? (
+                  <Skeleton height={220} radius="md" />
+                ) : (
+                  <BreakdownDonutCard
+                    title="Examiner roster by status"
+                    hint="Accounts across the roster"
+                    buckets={data.rosterByStatus ?? []}
+                    labelMap={ROSTER_STATUS_LABELS}
+                  />
+                ))}
+            </SimpleGrid>
+          )}
+        </>
       )}
 
       <Card withBorder radius="md" padding="lg" mt="xl">
