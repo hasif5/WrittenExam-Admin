@@ -2,18 +2,20 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useMemo, useState } from "react";
-import { ActionIcon, Badge, Select, Tooltip } from "@mantine/core";
-import { IconEye } from "@tabler/icons-react";
+import { ActionIcon, Badge, Button, Select, Tooltip } from "@mantine/core";
+import { IconCheck, IconEye, IconPencilCog, IconX } from "@tabler/icons-react";
 import type { MRT_ColumnDef } from "mantine-react-table";
 import { PageHero } from "@/components/PageHero";
 import { HEROES } from "@/assets/heroes";
 import { DataTable } from "@/components/DataTable";
 import { usePagination } from "@/lib/usePagination";
-import { useExaminerApps } from "@/api/queries/examiners";
+import { useApplicationDecision, useExaminerApps } from "@/api/queries/examiners";
 import { APPLICATION_STATUSES } from "@/lib/constants";
+import { runBulkWithToast } from "@/lib/bulk";
 import { formatDateTime } from "@/lib/format";
 import type { ApplicationStatus, ExaminerApplicationOut } from "@/api/types";
 import { ApplicationDrawer } from "./ApplicationDrawer";
+import { BulkDecisionModal, type BulkDecision } from "./BulkDecisionModal";
 
 function statusColor(status: string): string {
   switch (status) {
@@ -32,8 +34,25 @@ export function ExaminerAppsPage() {
   const { pagination, setPagination, limit, offset } = usePagination();
   const [status, setStatus] = useState<ApplicationStatus | undefined>("pending");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [bulk, setBulk] = useState<{
+    decision: BulkDecision;
+    apps: ExaminerApplicationOut[];
+    clear: () => void;
+  } | null>(null);
 
   const query = useExaminerApps({ status, limit, offset });
+  const decision = useApplicationDecision();
+
+  const runBulkDecision = async (remarks: string) => {
+    if (!bulk) return;
+    await runBulkWithToast(
+      bulk.apps,
+      (app) => decision.mutateAsync({ id: app.id, decision: bulk.decision, remarks }),
+      { noun: "applications", verbPast: "updated" },
+    );
+    bulk.clear();
+    setBulk(null);
+  };
 
   const columns = useMemo<MRT_ColumnDef<ExaminerApplicationOut>[]>(
     () => [
@@ -90,6 +109,39 @@ export function ExaminerAppsPage() {
         isFetching={query.isFetching}
         isError={query.isError}
         error={query.error}
+        enableRowSelection
+        getRowId={(row) => row.id}
+        renderBulkActions={(selected, clear) => (
+          <>
+            <Button
+              size="xs"
+              color="green"
+              variant="light"
+              leftSection={<IconCheck size={14} />}
+              onClick={() => setBulk({ decision: "approve", apps: selected, clear })}
+            >
+              Approve
+            </Button>
+            <Button
+              size="xs"
+              color="orange"
+              variant="light"
+              leftSection={<IconPencilCog size={14} />}
+              onClick={() => setBulk({ decision: "request-changes", apps: selected, clear })}
+            >
+              Request changes
+            </Button>
+            <Button
+              size="xs"
+              color="red"
+              variant="light"
+              leftSection={<IconX size={14} />}
+              onClick={() => setBulk({ decision: "reject", apps: selected, clear })}
+            >
+              Reject
+            </Button>
+          </>
+        )}
         enableRowActions
         renderRowActions={({ row }) => (
           <Tooltip label="Review">
@@ -98,6 +150,14 @@ export function ExaminerAppsPage() {
             </ActionIcon>
           </Tooltip>
         )}
+      />
+
+      <BulkDecisionModal
+        decision={bulk?.decision ?? null}
+        count={bulk?.apps.length ?? 0}
+        busy={decision.isPending}
+        onClose={() => setBulk(null)}
+        onConfirm={runBulkDecision}
       />
 
       <ApplicationDrawer applicationId={selectedId} onClose={() => setSelectedId(null)} />

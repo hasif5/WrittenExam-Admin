@@ -24,7 +24,7 @@ export const questionKeys = {
   usage: (id: string) => ["questions", "usage", id] as const,
 };
 
-export function useQuestions(filters: QuestionFilters) {
+export function useQuestions(filters: QuestionFilters, enabled = true) {
   return useQuery({
     queryKey: questionKeys.list(filters),
     queryFn: () =>
@@ -40,6 +40,7 @@ export function useQuestions(filters: QuestionFilters) {
           offset: filters.offset,
         },
       }),
+    enabled,
   });
 }
 

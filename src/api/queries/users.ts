@@ -24,7 +24,7 @@ export const userKeys = {
   deletionQueue: ["users", "deletion-queue"] as const,
 };
 
-export function useUsers(params: UsersParams) {
+export function useUsers(params: UsersParams, enabled = true) {
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () =>
@@ -36,6 +36,7 @@ export function useUsers(params: UsersParams) {
           user_type: params.userType,
         },
       }),
+    enabled,
   });
 }
 

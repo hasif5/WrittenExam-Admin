@@ -2,7 +2,7 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useMemo, useState } from "react";
-import { ActionIcon, Badge, Group, Menu, Select, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Group, Menu, Select, Text } from "@mantine/core";
 import {
   IconDotsVertical,
   IconCoin,
@@ -19,6 +19,7 @@ import { usePagination } from "@/lib/usePagination";
 import { useExaminerRoster, useSetAccountStatus } from "@/api/queries/examiners";
 import { ROSTER_STATUSES } from "@/lib/constants";
 import { confirmAction } from "@/lib/confirm";
+import { runBulkWithToast } from "@/lib/bulk";
 import { notifyError, notifySuccess } from "@/lib/notify";
 import type { ExaminerRosterOut, RosterStatus } from "@/api/types";
 import { DisplayFieldsModal } from "./DisplayFieldsModal";
@@ -39,11 +40,17 @@ function statusColor(status: string): string {
 export function ExaminersPage() {
   const { pagination, setPagination, limit, offset } = usePagination();
   const [status, setStatus] = useState<RosterStatus | undefined>(undefined);
+  const [search, setSearch] = useState("");
   const [displayExaminer, setDisplayExaminer] = useState<ExaminerRosterOut | null>(null);
   const [feeExaminer, setFeeExaminer] = useState<ExaminerRosterOut | null>(null);
   const [poolExaminer, setPoolExaminer] = useState<ExaminerRosterOut | null>(null);
 
-  const query = useExaminerRoster({ status, limit, offset });
+  const query = useExaminerRoster({ status, search: search || undefined, limit, offset });
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
   const setAccountStatus = useSetAccountStatus();
 
   const toggleStatus = (ex: ExaminerRosterOut) => {
@@ -69,6 +76,34 @@ export function ExaminersPage() {
         } catch (err) {
           notifyError(err, "Status change failed");
         }
+      },
+    });
+  };
+
+  const bulkStatus = (
+    selected: ExaminerRosterOut[],
+    action: "suspend" | "reactivate",
+    clear: () => void,
+  ) => {
+    const suspend = action === "suspend";
+    confirmAction({
+      title: `${suspend ? "Suspend" : "Reactivate"} ${selected.length} examiner(s)`,
+      danger: suspend,
+      children: (
+        <Text size="sm">
+          {suspend
+            ? "New routing stops immediately for the selected examiners. In-flight evaluations are protected."
+            : "This reverses the suspension and allows new routing again for the selected examiners."}
+        </Text>
+      ),
+      confirmLabel: suspend ? "Suspend" : "Reactivate",
+      onConfirm: async () => {
+        await runBulkWithToast(
+          selected,
+          (ex) => setAccountStatus.mutateAsync({ userId: ex.user_id, action }),
+          { noun: "examiners", verbPast: suspend ? "suspended" : "reactivated" },
+        );
+        clear();
       },
     });
   };
@@ -154,6 +189,34 @@ export function ExaminersPage() {
         isFetching={query.isFetching}
         isError={query.isError}
         error={query.error}
+        enableGlobalFilter
+        globalFilter={search}
+        onGlobalFilterChange={handleSearch}
+        searchPlaceholder="Search by name, university, email or phone"
+        enableRowSelection
+        getRowId={(row) => row.user_id}
+        renderBulkActions={(selected, clear) => (
+          <>
+            <Button
+              size="xs"
+              color="red"
+              variant="light"
+              leftSection={<IconPlayerPause size={14} />}
+              onClick={() => bulkStatus(selected, "suspend", clear)}
+            >
+              Suspend
+            </Button>
+            <Button
+              size="xs"
+              color="green"
+              variant="light"
+              leftSection={<IconPlayerPlay size={14} />}
+              onClick={() => bulkStatus(selected, "reactivate", clear)}
+            >
+              Reactivate
+            </Button>
+          </>
+        )}
         enableRowActions
         renderRowActions={({ row }) => {
           const ex = row.original;

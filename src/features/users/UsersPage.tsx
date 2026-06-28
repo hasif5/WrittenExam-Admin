@@ -3,11 +3,13 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useMemo, useState } from "react";
-import { ActionIcon, Badge, Button, Code, Tabs, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Button, Code, Tabs, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconDeviceMobile,
   IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
   IconPlus,
   IconShieldCog,
 } from "@tabler/icons-react";
@@ -16,11 +18,62 @@ import { PageHero } from "@/components/PageHero";
 import { HEROES } from "@/assets/heroes";
 import { DataTable } from "@/components/DataTable";
 import { usePagination } from "@/lib/usePagination";
-import { useUsers } from "@/api/queries/users";
+import { useSetUserActive, useUsers } from "@/api/queries/users";
 import { useAuth } from "@/auth/useAuth";
+import { confirmAction } from "@/lib/confirm";
+import { runBulkWithToast } from "@/lib/bulk";
 import type { UserOut } from "@/api/types";
 import { CreateStaffModal } from "./CreateStaffModal";
 import { UserEditorDrawer } from "./UserEditorDrawer";
+
+// Shared bulk suspend/reactivate bar for either users tab (frontend or staff).
+function userBulkActions(
+  mutate: (v: { userId: string; active: boolean }) => Promise<unknown>,
+) {
+  const run = (selected: UserOut[], active: boolean, clear: () => void) =>
+    confirmAction({
+      title: `${active ? "Reactivate" : "Suspend"} ${selected.length} account(s)`,
+      danger: !active,
+      children: (
+        <Text size="sm">
+          {active
+            ? "Re-enables login for the selected accounts."
+            : "Disables login for the selected accounts immediately."}
+        </Text>
+      ),
+      confirmLabel: active ? "Reactivate" : "Suspend",
+      onConfirm: async () => {
+        await runBulkWithToast(selected, (u) => mutate({ userId: u.id, active }), {
+          noun: "accounts",
+          verbPast: active ? "reactivated" : "suspended",
+        });
+        clear();
+      },
+    });
+
+  return (selected: UserOut[], clear: () => void) => (
+    <>
+      <Button
+        size="xs"
+        color="red"
+        variant="light"
+        leftSection={<IconPlayerPause size={14} />}
+        onClick={() => run(selected, false, clear)}
+      >
+        Suspend
+      </Button>
+      <Button
+        size="xs"
+        color="green"
+        variant="light"
+        leftSection={<IconPlayerPlay size={14} />}
+        onClick={() => run(selected, true, clear)}
+      >
+        Reactivate
+      </Button>
+    </>
+  );
+}
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
@@ -43,6 +96,7 @@ function FrontendUsersTab() {
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [drawerOpened, drawerHandlers] = useDisclosure(false);
   const query = useUsers({ search: search || undefined, limit, offset, userType: "frontend" });
+  const setActive = useSetUserActive();
 
   const openUser = (id: string) => {
     setEditUserId(id);
@@ -96,6 +150,9 @@ function FrontendUsersTab() {
         onGlobalFilterChange={handleSearch}
         searchPlaceholder="Search by phone or email"
         emptyText="No frontend users found."
+        enableRowSelection
+        getRowId={(row) => row.id}
+        renderBulkActions={userBulkActions(setActive.mutateAsync)}
         enableRowActions
         renderRowActions={({ row }) => (
           <Tooltip label="Manage user">
@@ -124,6 +181,7 @@ function StaffUsersTab() {
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [drawerOpened, drawerHandlers] = useDisclosure(false);
   const query = useUsers({ search: search || undefined, limit, offset, userType: "staff" });
+  const setActive = useSetUserActive();
 
   const openUser = (id: string) => {
     setEditUserId(id);
@@ -177,6 +235,9 @@ function StaffUsersTab() {
         onGlobalFilterChange={handleSearch}
         searchPlaceholder="Search by email"
         emptyText="No staff accounts found."
+        enableRowSelection
+        getRowId={(row) => row.id}
+        renderBulkActions={userBulkActions(setActive.mutateAsync)}
         toolbar={
           canCreateStaff ? (
             <Button leftSection={<IconPlus size={16} />} onClick={createHandlers.open}>

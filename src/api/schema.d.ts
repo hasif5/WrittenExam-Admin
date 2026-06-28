@@ -1171,6 +1171,13 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** ExaminerPoolMembershipState */
+        ExaminerPoolMembershipState: {
+            /** Pool Type */
+            pool_type: string;
+            /** Active */
+            active: boolean;
+        };
         /** ExaminerPoolTagRequest */
         ExaminerPoolTagRequest: {
             /** Pool Type */
@@ -1200,6 +1207,11 @@ export interface components {
             verification_badges?: unknown[] | null;
             /** Available */
             available?: boolean | null;
+            /**
+             * Pool Memberships
+             * @default []
+             */
+            pool_memberships: components["schemas"]["ExaminerPoolMembershipState"][];
         };
         /** ExaminerSubjectIn */
         ExaminerSubjectIn: {
@@ -3062,6 +3074,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string | null;
+                search?: string | null;
                 limit?: number;
                 offset?: number;
             };

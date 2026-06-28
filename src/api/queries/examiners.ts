@@ -20,6 +20,7 @@ interface AppsParams {
 
 interface RosterParams {
   status?: RosterStatus;
+  search?: string;
   limit: number;
   offset: number;
 }
@@ -32,13 +33,14 @@ export const examinerKeys = {
   rosterList: (p: RosterParams) => ["examiner-roster", "list", p] as const,
 };
 
-export function useExaminerApps(params: AppsParams) {
+export function useExaminerApps(params: AppsParams, enabled = true) {
   return useQuery({
     queryKey: examinerKeys.appsList(params),
     queryFn: () =>
       api.get<Page<ExaminerApplicationOut>>("/admin/examiner-applications", {
         query: { status: params.status, limit: params.limit, offset: params.offset },
       }),
+    enabled,
   });
 }
 
@@ -76,13 +78,19 @@ export function useApplicationDecision() {
   });
 }
 
-export function useExaminerRoster(params: RosterParams) {
+export function useExaminerRoster(params: RosterParams, enabled = true) {
   return useQuery({
     queryKey: examinerKeys.rosterList(params),
     queryFn: () =>
       api.get<Page<ExaminerRosterOut>>("/admin/examiners", {
-        query: { status: params.status, limit: params.limit, offset: params.offset },
+        query: {
+          status: params.status,
+          search: params.search,
+          limit: params.limit,
+          offset: params.offset,
+        },
       }),
+    enabled,
   });
 }
 
