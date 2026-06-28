@@ -66,12 +66,15 @@ const PANEL: Record<Appearance, PanelStyle> = {
     pillBorder: "rgba(255,255,255,0.30)",
   },
   light: {
+    // Dark text over the airy hero, so the scrim LIGHTENS the lower band (where
+    // the headline/subtitle/pills sit) to lift it off the busy paper art, then
+    // fades out by mid-panel so the upper imagery stays visible.
     scrim:
-      "linear-gradient(160deg, rgba(255,255,255,0.04) 0%, rgba(231,236,255,0.18) 55%, rgba(49,74,156,0.16) 100%)",
+      "linear-gradient(to top, rgba(248,249,253,0.95) 0%, rgba(248,249,253,0.85) 18%, rgba(248,249,253,0.45) 34%, rgba(248,249,253,0) 56%)",
     fg: "#1e2547",
-    sub: "rgba(30,37,71,0.74)",
-    pillBg: "rgba(49,74,156,0.10)",
-    pillBorder: "rgba(49,74,156,0.24)",
+    sub: "rgba(30,37,71,0.78)",
+    pillBg: "rgba(255,255,255,0.65)",
+    pillBorder: "rgba(49,74,156,0.22)",
   },
 };
 
