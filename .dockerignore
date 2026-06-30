@@ -1,0 +1,21 @@
+# File: .dockerignore
+# Keep the build context small; node_modules and dist are rebuilt in the image.
+# Author: Hasif Ahmed <xmart@live.com> (www.hasif.info)
+# Created: 2026-06-30
+
+.git
+.gitignore
+node_modules
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+.vite
+coverage
+.env
+.env.*
+!.env.example
+.DS_Store
+.vscode
+.idea
+npm-debug.log*
