@@ -1314,10 +1314,10 @@ export interface components {
             /** Offset */
             offset: number;
         };
-        /** Page[UserOut] */
-        Page_UserOut_: {
+        /** Page[UserDetailOut] */
+        Page_UserDetailOut_: {
             /** Items */
-            items: components["schemas"]["UserOut"][];
+            items: components["schemas"]["UserDetailOut"][];
             /** Total */
             total: number;
             /** Limit */
@@ -2355,6 +2355,8 @@ export interface operations {
                 offset?: number;
                 search?: string | null;
                 user_type?: string | null;
+                status?: string | null;
+                joined_after?: string | null;
             };
             header?: never;
             path?: never;
@@ -2368,7 +2370,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page_UserOut_"];
+                    "application/json": components["schemas"]["Page_UserDetailOut_"];
                 };
             };
             /** @description Validation Error */

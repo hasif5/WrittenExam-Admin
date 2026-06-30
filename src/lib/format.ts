@@ -9,6 +9,12 @@ export function formatDateTime(value: string | null | undefined): string {
   return d.isValid() ? d.format("DD MMM YYYY, HH:mm") : "-";
 }
 
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return "-";
+  const d = dayjs(value);
+  return d.isValid() ? d.format("DD MMM YYYY") : "-";
+}
+
 export function relativeDaysFrom(value: string | null | undefined): string {
   if (!value) return "-";
   const target = dayjs(value);

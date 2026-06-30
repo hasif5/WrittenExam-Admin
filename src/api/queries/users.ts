@@ -15,6 +15,8 @@ interface UsersParams {
   limit: number;
   offset: number;
   userType?: "frontend" | "staff";
+  status?: "active" | "inactive" | "pending_deletion";
+  joinedAfter?: string;
 }
 
 export const userKeys = {
@@ -28,12 +30,14 @@ export function useUsers(params: UsersParams, enabled = true) {
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () =>
-      api.get<Page<UserOut>>("/admin/users", {
+      api.get<Page<UserDetailOut>>("/admin/users", {
         query: {
           search: params.search,
           limit: params.limit,
           offset: params.offset,
           user_type: params.userType,
+          status: params.status,
+          joined_after: params.joinedAfter,
         },
       }),
     enabled,

@@ -3,7 +3,7 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useMemo, useState } from "react";
-import { ActionIcon, Badge, Button, Group, Menu, Select, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Menu, Select, SimpleGrid, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconDotsVertical,
@@ -152,7 +152,7 @@ export function QuestionBankPage() {
         }
       />
 
-      <Group mb="md" gap="sm" wrap="wrap">
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mb="md">
         <Select
           placeholder="All sections"
           data={(sections.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
@@ -165,7 +165,6 @@ export function QuestionBankPage() {
           }}
           clearable
           searchable
-          w={200}
         />
         <Select
           placeholder="All subjects"
@@ -179,7 +178,6 @@ export function QuestionBankPage() {
           clearable
           searchable
           disabled={!sectionId}
-          w={200}
         />
         <Select
           placeholder="All chapters"
@@ -192,7 +190,6 @@ export function QuestionBankPage() {
           clearable
           searchable
           disabled={!subjectId}
-          w={200}
         />
         <Select
           placeholder="All types"
@@ -203,9 +200,8 @@ export function QuestionBankPage() {
             resetPage();
           }}
           clearable
-          w={200}
         />
-      </Group>
+      </SimpleGrid>
 
       <DataTable<QuestionOut>
         columns={columns}

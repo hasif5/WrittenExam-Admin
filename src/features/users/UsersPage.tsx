@@ -2,8 +2,8 @@
 // users (students/examiners/pool, default) and email-based staff/admin accounts.
 // Author: Hasif Ahmed (www.hasif.info)
 
-import { useMemo, useState } from "react";
-import { ActionIcon, Badge, Button, Code, Tabs, Text, Tooltip } from "@mantine/core";
+import { useState, type ReactNode } from "react";
+import { ActionIcon, Button, Tabs, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconDeviceMobile,
@@ -22,15 +22,22 @@ import { useSetUserActive, useUsers } from "@/api/queries/users";
 import { useAuth } from "@/auth/useAuth";
 import { confirmAction } from "@/lib/confirm";
 import { runBulkWithToast } from "@/lib/bulk";
-import type { UserOut } from "@/api/types";
+import type { UserDetailOut } from "@/api/types";
 import { CreateStaffModal } from "./CreateStaffModal";
 import { UserEditorDrawer } from "./UserEditorDrawer";
+import { frontendUserColumns, staffUserColumns } from "./userColumns";
+import {
+  UsersToolbar,
+  joinedAfterFromPreset,
+  type JoinedPreset,
+  type UserStatusFilter,
+} from "./UsersToolbar";
 
 // Shared bulk suspend/reactivate bar for either users tab (frontend or staff).
 function userBulkActions(
   mutate: (v: { userId: string; active: boolean }) => Promise<unknown>,
 ) {
-  const run = (selected: UserOut[], active: boolean, clear: () => void) =>
+  const run = (selected: UserDetailOut[], active: boolean, clear: () => void) =>
     confirmAction({
       title: `${active ? "Reactivate" : "Suspend"} ${selected.length} account(s)`,
       danger: !active,
@@ -51,7 +58,7 @@ function userBulkActions(
       },
     });
 
-  return (selected: UserOut[], clear: () => void) => (
+  return (selected: UserDetailOut[], clear: () => void) => (
     <>
       <Button
         size="xs"
@@ -75,67 +82,46 @@ function userBulkActions(
   );
 }
 
-function StatusBadge({ active }: { active: boolean }) {
-  return (
-    <Badge color={active ? "green" : "gray"} variant="light">
-      {active ? "Active" : "Inactive"}
-    </Badge>
-  );
+interface UsersTabProps {
+  userType: "frontend" | "staff";
+  columns: MRT_ColumnDef<UserDetailOut>[];
+  searchPlaceholder: string;
+  emptyText: string;
+  extraToolbar?: ReactNode;
 }
 
-function verifiedText(user: UserOut): string {
-  const flags: string[] = [];
-  if (user.phone_verified) flags.push("phone");
-  if (user.email_verified) flags.push("email");
-  return flags.length ? flags.join(", ") : "-";
-}
-
-function FrontendUsersTab() {
+// Shared tab body: identical table + filters for either user population; only the
+// user_type, columns, copy, and an optional toolbar action (Create staff) differ.
+function UsersTab({ userType, columns, searchPlaceholder, emptyText, extraToolbar }: UsersTabProps) {
   const { pagination, setPagination, limit, offset } = usePagination();
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<UserStatusFilter | null>(null);
+  const [joined, setJoined] = useState<JoinedPreset>("any");
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [drawerOpened, drawerHandlers] = useDisclosure(false);
-  const query = useUsers({ search: search || undefined, limit, offset, userType: "frontend" });
+  const query = useUsers({
+    search: search || undefined,
+    limit,
+    offset,
+    userType,
+    status: status ?? undefined,
+    joinedAfter: joinedAfterFromPreset(joined),
+  });
   const setActive = useSetUserActive();
 
+  const resetPage = () => setPagination((p) => ({ ...p, pageIndex: 0 }));
   const openUser = (id: string) => {
     setEditUserId(id);
     drawerHandlers.open();
   };
-
   const handleSearch = (value: string) => {
     setSearch(value);
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
+    resetPage();
   };
-
-  const columns = useMemo<MRT_ColumnDef<UserOut>[]>(
-    () => [
-      { accessorKey: "phone", header: "Phone", Cell: ({ row }) => row.original.phone ?? "-" },
-      {
-        accessorKey: "is_active",
-        header: "Status",
-        size: 110,
-        Cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
-      },
-      {
-        id: "verified",
-        header: "Verified",
-        size: 140,
-        Cell: ({ row }) => verifiedText(row.original),
-      },
-      {
-        accessorKey: "id",
-        header: "ID",
-        size: 120,
-        Cell: ({ row }) => <Code>{row.original.id.slice(0, 8)}</Code>,
-      },
-    ],
-    [],
-  );
 
   return (
     <>
-      <DataTable<UserOut>
+      <DataTable<UserDetailOut>
         columns={columns}
         data={query.data?.items ?? []}
         rowCount={query.data?.total ?? 0}
@@ -148,11 +134,26 @@ function FrontendUsersTab() {
         enableGlobalFilter
         globalFilter={search}
         onGlobalFilterChange={handleSearch}
-        searchPlaceholder="Search by phone or email"
-        emptyText="No frontend users found."
+        searchPlaceholder={searchPlaceholder}
+        emptyText={emptyText}
         enableRowSelection
         getRowId={(row) => row.id}
         renderBulkActions={userBulkActions(setActive.mutateAsync)}
+        toolbar={extraToolbar}
+        filters={
+          <UsersToolbar
+            status={status}
+            onStatusChange={(value) => {
+              setStatus(value);
+              resetPage();
+            }}
+            joined={joined}
+            onJoinedChange={(value) => {
+              setJoined(value);
+              resetPage();
+            }}
+          />
+        }
         enableRowActions
         renderRowActions={({ row }) => (
           <Tooltip label="Manage user">
@@ -172,95 +173,37 @@ function FrontendUsersTab() {
   );
 }
 
+function FrontendUsersTab() {
+  return (
+    <UsersTab
+      userType="frontend"
+      columns={frontendUserColumns}
+      searchPlaceholder="Search by name, phone, or email"
+      emptyText="No frontend users found."
+    />
+  );
+}
+
 function StaffUsersTab() {
   const { can } = useAuth();
-  const canCreateStaff = can("users.create_staff");
-  const { pagination, setPagination, limit, offset } = usePagination();
-  const [search, setSearch] = useState("");
   const [createOpened, createHandlers] = useDisclosure(false);
-  const [editUserId, setEditUserId] = useState<string | null>(null);
-  const [drawerOpened, drawerHandlers] = useDisclosure(false);
-  const query = useUsers({ search: search || undefined, limit, offset, userType: "staff" });
-  const setActive = useSetUserActive();
-
-  const openUser = (id: string) => {
-    setEditUserId(id);
-    drawerHandlers.open();
-  };
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
-  };
-
-  const columns = useMemo<MRT_ColumnDef<UserOut>[]>(
-    () => [
-      { accessorKey: "email", header: "Email", Cell: ({ row }) => row.original.email ?? "-" },
-      {
-        accessorKey: "is_active",
-        header: "Status",
-        size: 110,
-        Cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
-      },
-      {
-        id: "verified",
-        header: "Verified",
-        size: 140,
-        Cell: ({ row }) => verifiedText(row.original),
-      },
-      {
-        accessorKey: "id",
-        header: "ID",
-        size: 120,
-        Cell: ({ row }) => <Code>{row.original.id.slice(0, 8)}</Code>,
-      },
-    ],
-    [],
-  );
 
   return (
     <>
-      <DataTable<UserOut>
-        columns={columns}
-        data={query.data?.items ?? []}
-        rowCount={query.data?.total ?? 0}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-        isLoading={query.isLoading}
-        isFetching={query.isFetching}
-        isError={query.isError}
-        error={query.error}
-        enableGlobalFilter
-        globalFilter={search}
-        onGlobalFilterChange={handleSearch}
-        searchPlaceholder="Search by email"
+      <UsersTab
+        userType="staff"
+        columns={staffUserColumns}
+        searchPlaceholder="Search by name or email"
         emptyText="No staff accounts found."
-        enableRowSelection
-        getRowId={(row) => row.id}
-        renderBulkActions={userBulkActions(setActive.mutateAsync)}
-        toolbar={
-          canCreateStaff ? (
+        extraToolbar={
+          can("users.create_staff") ? (
             <Button leftSection={<IconPlus size={16} />} onClick={createHandlers.open}>
               Create staff
             </Button>
           ) : undefined
         }
-        enableRowActions
-        renderRowActions={({ row }) => (
-          <Tooltip label="Manage user">
-            <ActionIcon variant="subtle" onClick={() => openUser(row.original.id)}>
-              <IconPencil size={18} />
-            </ActionIcon>
-          </Tooltip>
-        )}
       />
-
       <CreateStaffModal opened={createOpened} onClose={createHandlers.close} />
-      <UserEditorDrawer
-        opened={drawerOpened}
-        userId={editUserId}
-        onClose={drawerHandlers.close}
-      />
     </>
   );
 }

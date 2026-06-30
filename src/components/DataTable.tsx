@@ -6,7 +6,8 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Button, Group, Text } from "@mantine/core";
+import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   MantineReactTable,
   useMantineReactTable,
@@ -15,6 +16,7 @@ import {
   type MRT_RowData,
   type MRT_RowSelectionState,
 } from "mantine-react-table";
+import { IconSearch } from "@tabler/icons-react";
 import { errorMessage } from "@/lib/errors";
 import classes from "./DataTable.module.css";
 
@@ -32,7 +34,11 @@ interface DataTableProps<T extends MRT_RowData> {
   globalFilter?: string;
   onGlobalFilterChange?: (value: string) => void;
   searchPlaceholder?: string;
+  // Primary actions (e.g. a "Create" button); rendered at the toolbar's left.
   toolbar?: ReactNode;
+  // Filter controls (selects/segmented controls); rendered right-aligned next to
+  // the search box so every list page places its filters consistently.
+  filters?: ReactNode;
   emptyText?: string;
   enableRowActions?: boolean;
   renderRowActions?: (props: { row: { original: T } }) => ReactNode;
@@ -62,6 +68,7 @@ export function DataTable<T extends MRT_RowData>({
   onGlobalFilterChange,
   searchPlaceholder,
   toolbar,
+  filters,
   emptyText = "No records found.",
   enableRowActions = false,
   renderRowActions,
@@ -89,7 +96,12 @@ export function DataTable<T extends MRT_RowData>({
       : [];
 
   const hasBulkBar = selectedRows.length > 0 && Boolean(renderBulkActions);
-  const showTopToolbar = Boolean(toolbar) || (enableRowSelection && Boolean(renderBulkActions));
+  const showTopToolbar =
+    Boolean(toolbar) ||
+    Boolean(filters) ||
+    enableGlobalFilter ||
+    (enableRowSelection && Boolean(renderBulkActions));
+  const isMobile = useMediaQuery("(max-width: 48em)");
 
   const table = useMantineReactTable<T>({
     columns,
@@ -100,10 +112,16 @@ export function DataTable<T extends MRT_RowData>({
     manualSorting: true,
     enableSorting: false,
     enableColumnActions: false,
+    // Server-driven lists do not wire per-column filtering, so MRT's column
+    // filter text inputs (and the funnel toggle) would be dead UI. Disable them;
+    // pages provide friendly toolbar filters + the global search box instead.
+    enableColumnFilters: false,
     enableDensityToggle: false,
     enableFullScreenToggle: false,
     enableHiding: false,
-    enableGlobalFilter,
+    // The wrapper renders its own search control so filters/search/actions keep
+    // one consistent layout across every table page.
+    enableGlobalFilter: false,
     onPaginationChange,
     onGlobalFilterChange: onGlobalFilterChange
       ? (updater) => {
@@ -129,13 +147,25 @@ export function DataTable<T extends MRT_RowData>({
     mantineToolbarAlertBannerProps: isError
       ? { color: "red", children: errorMessage(error) }
       : undefined,
-    mantineSearchTextInputProps: searchPlaceholder
-      ? { placeholder: searchPlaceholder, style: { minWidth: 280 } }
-      : undefined,
     mantinePaperProps: { withBorder: true, shadow: "xs" },
     // Shared row micro-interaction (hover tint + leading accent bar) so every list
     // page feels as alive as the dashboard cards. See DataTable.module.css.
     mantineTableBodyRowProps: { className: classes.row },
+    // Let long cell content wrap instead of forcing a very wide table - keeps lists
+    // readable on mobile (the container still scrolls horizontally when needed).
+    mantineTableBodyCellProps: {
+      style: { whiteSpace: "normal", wordBreak: "break-word", verticalAlign: "top" },
+    },
+    // Mobile pagination: drop the space-hungry "rows per page" select and compact
+    // controls so the range + prev/next fit on one tidy, centered row (no wrapping).
+    mantinePaginationProps: {
+      showRowsPerPage: !isMobile,
+      withControls: true,
+      ...(isMobile ? { size: "sm" as const } : {}),
+    },
+    mantineBottomToolbarProps: isMobile
+      ? { style: { justifyContent: "center" } }
+      : undefined,
     enableRowActions,
     renderRowActions: renderRowActions
       ? ({ row }) => renderRowActions({ row: { original: row.original } })
@@ -149,20 +179,39 @@ export function DataTable<T extends MRT_RowData>({
     positionActionsColumn: "last",
     renderTopToolbarCustomActions: showTopToolbar
       ? () => (
-          <Group gap="sm" wrap="wrap" align="center">
-            {toolbar}
-            {hasBulkBar ? (
-              <Group gap="xs" wrap="nowrap" align="center">
-                <Text size="sm" fw={500}>
-                  {selectedRows.length} selected
-                </Text>
-                {renderBulkActions?.(selectedRows, clearSelection)}
-                <Button variant="subtle" size="xs" onClick={clearSelection}>
-                  Clear
-                </Button>
+          <Stack gap="sm" style={{ flex: 1, width: "100%" }}>
+            {toolbar || hasBulkBar ? (
+              <Group gap="sm" wrap="wrap" align="center">
+                {toolbar}
+                {hasBulkBar ? (
+                  <Group gap="xs" wrap="nowrap" align="center">
+                    <Text size="sm" fw={500}>
+                      {selectedRows.length} selected
+                    </Text>
+                    {renderBulkActions?.(selectedRows, clearSelection)}
+                    <Button variant="subtle" size="xs" onClick={clearSelection}>
+                      Clear
+                    </Button>
+                  </Group>
+                ) : null}
               </Group>
             ) : null}
-          </Group>
+            {filters || enableGlobalFilter ? (
+              <Group gap="sm" wrap="wrap" align="center">
+                {filters}
+                {enableGlobalFilter ? (
+                  <TextInput
+                    aria-label={searchPlaceholder ?? "Search table"}
+                    placeholder={searchPlaceholder ?? "Search"}
+                    leftSection={<IconSearch size={16} />}
+                    value={globalFilter ?? ""}
+                    onChange={(event) => onGlobalFilterChange?.(event.currentTarget.value)}
+                    style={{ minWidth: isMobile ? 210 : 230 }}
+                  />
+                ) : null}
+              </Group>
+            ) : null}
+          </Stack>
         )
       : undefined,
     localization: { noRecordsToDisplay: emptyText },
