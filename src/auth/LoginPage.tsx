@@ -114,7 +114,7 @@ function BrandPanel({ appearance }: { appearance: Appearance }) {
           inset: 0,
           pointerEvents: "none",
           background:
-            "linear-gradient(to right, transparent 62%, var(--login-form-bg, var(--mantine-color-body)) 100%)",
+            "linear-gradient(to right, transparent 62%, var(--login-hero-blend, var(--login-form-bg, var(--mantine-color-body))) 100%)",
         }}
       />
       <Group

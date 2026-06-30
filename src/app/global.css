@@ -51,6 +51,9 @@
   --app-scrollbar-thumb: var(--mantine-color-rainbow-6);
   /* Let the playful page wash show through the login form panel. */
   --login-form-bg: transparent;
+  /* The form panel is transparent here, so the login hero blend can't fade to it.
+   * Fade to the page wash base colour instead so the split still has no hard seam. */
+  --login-hero-blend: #efe2fb;
 }
 
 [data-app-theme="colorful"] body {
