@@ -227,6 +227,15 @@ export function QuestionBankPage() {
         }
         enableExpanding
         getSubRows={(row) => row.children}
+        onRowClick={
+          canWrite
+            ? (q) => {
+                // Child rows are edited inside their parent's drawer, so only
+                // top-level questions open the editor directly on row click.
+                if (!q.parent_question_id) openEdit(q.id);
+              }
+            : undefined
+        }
         enableRowActions
         renderRowActions={({ row }) => (
           <Menu shadow="md" position="bottom-end" withinPortal>

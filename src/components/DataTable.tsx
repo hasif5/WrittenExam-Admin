@@ -42,6 +42,10 @@ interface DataTableProps<T extends MRT_RowData> {
   emptyText?: string;
   enableRowActions?: boolean;
   renderRowActions?: (props: { row: { original: T } }) => ReactNode;
+  // Make whole rows clickable (e.g. open an edit drawer). Clicks landing on an
+  // interactive element (buttons, links, inputs, menus, the expand toggle) are
+  // ignored so row actions / expanders keep working.
+  onRowClick?: (row: T) => void;
   enableExpanding?: boolean;
   enableExpandAll?: boolean;
   getSubRows?: (originalRow: T, index: number) => T[] | undefined;
@@ -72,6 +76,7 @@ export function DataTable<T extends MRT_RowData>({
   emptyText = "No records found.",
   enableRowActions = false,
   renderRowActions,
+  onRowClick,
   enableExpanding = false,
   enableExpandAll = false,
   getSubRows,
@@ -184,7 +189,25 @@ export function DataTable<T extends MRT_RowData>({
     mantinePaperProps: { withBorder: true, shadow: "xs" },
     // Shared row micro-interaction (hover tint + leading accent bar) so every list
     // page feels as alive as the dashboard cards. See DataTable.module.css.
-    mantineTableBodyRowProps: { className: classes.row },
+    // When onRowClick is set, the whole row becomes a clickable target (pointer
+    // cursor); clicks on interactive descendants are ignored so actions/expanders
+    // still work without triggering the row handler.
+    mantineTableBodyRowProps: onRowClick
+      ? ({ row }) => ({
+          className: classes.row,
+          style: { cursor: "pointer" },
+          onClick: (event: React.MouseEvent<HTMLTableRowElement>) => {
+            if (
+              (event.target as HTMLElement).closest(
+                'button, a, input, label, [role="menuitem"], [data-no-row-click]',
+              )
+            ) {
+              return;
+            }
+            onRowClick(row.original);
+          },
+        })
+      : { className: classes.row },
     // Let long cell content wrap instead of forcing a very wide table - keeps lists
     // readable on mobile (the container still scrolls horizontally when needed).
     mantineTableBodyCellProps: {
