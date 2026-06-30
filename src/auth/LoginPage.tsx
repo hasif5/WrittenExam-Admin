@@ -105,6 +105,18 @@ function BrandPanel({ appearance }: { appearance: Appearance }) {
       }}
     >
       <Box style={{ position: "absolute", inset: 0, background: cfg.scrim }} />
+      {/* Right-edge blend: fade the hero into the form panel's background so the
+          split has no hard vertical seam. Uses the same token as the form side so
+          it matches in every scheme. */}
+      <Box
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "linear-gradient(to right, transparent 62%, var(--login-form-bg, var(--mantine-color-body)) 100%)",
+        }}
+      />
       <Group
         style={{ position: "absolute", top: 36, left: 40, right: 40 }}
         justify="flex-start"

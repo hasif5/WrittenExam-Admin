@@ -152,4 +152,4 @@ export const APP_THEMES: Record<Appearance, AppThemeEntry> = {
 
 export const APPEARANCE_ORDER: Appearance[] = ["light", "dark", "colorful"];
 
-export const DEFAULT_APPEARANCE: Appearance = "dark";
+export const DEFAULT_APPEARANCE: Appearance = "light";
