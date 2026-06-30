@@ -85,18 +85,6 @@ export function ExaminerAppsPage() {
         image={HEROES.examinerApps}
         title="Examiner Applications"
         description="Review public examiner applications and approve, reject, or request changes."
-        actions={
-          <Select
-            data={[{ value: "", label: "All statuses" }, ...APPLICATION_STATUSES]}
-            value={status ?? ""}
-            onChange={(v) => {
-              setStatus((v || undefined) as ApplicationStatus | undefined);
-              setPagination((p) => ({ ...p, pageIndex: 0 }));
-            }}
-            w={200}
-            allowDeselect={false}
-          />
-        }
       />
 
       <DataTable<ExaminerApplicationOut>
@@ -109,6 +97,18 @@ export function ExaminerAppsPage() {
         isFetching={query.isFetching}
         isError={query.isError}
         error={query.error}
+        filters={
+          <Select
+            data={[{ value: "", label: "All statuses" }, ...APPLICATION_STATUSES]}
+            value={status ?? ""}
+            onChange={(v) => {
+              setStatus((v || undefined) as ApplicationStatus | undefined);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
+            w={200}
+            allowDeselect={false}
+          />
+        }
         enableRowSelection
         getRowId={(row) => row.id}
         renderBulkActions={(selected, clear) => (

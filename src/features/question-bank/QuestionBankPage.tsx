@@ -3,7 +3,7 @@
 // Author: Hasif Ahmed (www.hasif.info)
 
 import { useMemo, useState } from "react";
-import { ActionIcon, Badge, Button, Menu, Select, SimpleGrid, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Menu, Select, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconDotsVertical,
@@ -152,57 +152,6 @@ export function QuestionBankPage() {
         }
       />
 
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="sm" mb="md">
-        <Select
-          placeholder="All sections"
-          data={(sections.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
-          value={sectionId}
-          onChange={(v) => {
-            setSectionId(v);
-            setSubjectId(null);
-            setChapterId(null);
-            resetPage();
-          }}
-          clearable
-          searchable
-        />
-        <Select
-          placeholder="All subjects"
-          data={(subjects.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
-          value={subjectId}
-          onChange={(v) => {
-            setSubjectId(v);
-            setChapterId(null);
-            resetPage();
-          }}
-          clearable
-          searchable
-          disabled={!sectionId}
-        />
-        <Select
-          placeholder="All chapters"
-          data={(chapters.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
-          value={chapterId}
-          onChange={(v) => {
-            setChapterId(v);
-            resetPage();
-          }}
-          clearable
-          searchable
-          disabled={!subjectId}
-        />
-        <Select
-          placeholder="All types"
-          data={QUESTION_TYPES as unknown as { value: string; label: string }[]}
-          value={type ?? null}
-          onChange={(v) => {
-            setType((v as QuestionType) || undefined);
-            resetPage();
-          }}
-          clearable
-        />
-      </SimpleGrid>
-
       <DataTable<QuestionOut>
         columns={columns}
         data={query.data?.items ?? []}
@@ -220,6 +169,62 @@ export function QuestionBankPage() {
           resetPage();
         }}
         searchPlaceholder="Keyword (question + solution)"
+        filters={
+          <>
+            <Select
+              placeholder="All sections"
+              data={(sections.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
+              value={sectionId}
+              onChange={(v) => {
+                setSectionId(v);
+                setSubjectId(null);
+                setChapterId(null);
+                resetPage();
+              }}
+              clearable
+              searchable
+              w={180}
+            />
+            <Select
+              placeholder="All subjects"
+              data={(subjects.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
+              value={subjectId}
+              onChange={(v) => {
+                setSubjectId(v);
+                setChapterId(null);
+                resetPage();
+              }}
+              clearable
+              searchable
+              disabled={!sectionId}
+              w={180}
+            />
+            <Select
+              placeholder="All chapters"
+              data={(chapters.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+              value={chapterId}
+              onChange={(v) => {
+                setChapterId(v);
+                resetPage();
+              }}
+              clearable
+              searchable
+              disabled={!subjectId}
+              w={180}
+            />
+            <Select
+              placeholder="All types"
+              data={QUESTION_TYPES as unknown as { value: string; label: string }[]}
+              value={type ?? null}
+              onChange={(v) => {
+                setType((v as QuestionType) || undefined);
+                resetPage();
+              }}
+              clearable
+              w={160}
+            />
+          </>
+        }
         enableExpanding
         getSubRows={(row) => row.children}
         enableRowActions

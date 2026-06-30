@@ -28,10 +28,10 @@ import { UserEditorDrawer } from "./UserEditorDrawer";
 import { frontendUserColumns, staffUserColumns } from "./userColumns";
 import {
   UsersToolbar,
-  joinedAfterFromPreset,
   type JoinedPreset,
   type UserStatusFilter,
 } from "./UsersToolbar";
+import { joinedAfterFromPreset } from "./userFilterPresets";
 
 // Shared bulk suspend/reactivate bar for either users tab (frontend or staff).
 function userBulkActions(

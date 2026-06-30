@@ -8,7 +8,6 @@
 
 import { Group, Select } from "@mantine/core";
 import { IconCalendarEvent, IconFilter } from "@tabler/icons-react";
-import dayjs from "dayjs";
 
 export type UserStatusFilter = "active" | "inactive" | "pending_deletion";
 export type JoinedPreset = "any" | "7d" | "30d" | "90d" | "year";
@@ -26,22 +25,6 @@ const JOINED_OPTIONS: { value: JoinedPreset; label: string }[] = [
   { value: "90d", label: "Last 90 days" },
   { value: "year", label: "Last 12 months" },
 ];
-
-// Maps a joined preset to the ISO instant passed to the API (undefined = no bound).
-export function joinedAfterFromPreset(preset: JoinedPreset): string | undefined {
-  switch (preset) {
-    case "7d":
-      return dayjs().subtract(7, "day").toISOString();
-    case "30d":
-      return dayjs().subtract(30, "day").toISOString();
-    case "90d":
-      return dayjs().subtract(90, "day").toISOString();
-    case "year":
-      return dayjs().subtract(12, "month").toISOString();
-    default:
-      return undefined;
-  }
-}
 
 interface UsersToolbarProps {
   status: UserStatusFilter | null;

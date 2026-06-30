@@ -165,18 +165,6 @@ export function ExaminersPage() {
         image={HEROES.examiners}
         title="Examiner Roster"
         description="The admin-curated active roster. Edit display fields, fees, pool tags, and account status."
-        actions={
-          <Select
-            data={[{ value: "", label: "All statuses" }, ...ROSTER_STATUSES]}
-            value={status ?? ""}
-            onChange={(v) => {
-              setStatus((v || undefined) as RosterStatus | undefined);
-              setPagination((p) => ({ ...p, pageIndex: 0 }));
-            }}
-            w={200}
-            allowDeselect={false}
-          />
-        }
       />
 
       <DataTable<ExaminerRosterOut>
@@ -193,6 +181,18 @@ export function ExaminersPage() {
         globalFilter={search}
         onGlobalFilterChange={handleSearch}
         searchPlaceholder="Search by name, university, email or phone"
+        filters={
+          <Select
+            data={[{ value: "", label: "All statuses" }, ...ROSTER_STATUSES]}
+            value={status ?? ""}
+            onChange={(v) => {
+              setStatus((v || undefined) as RosterStatus | undefined);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
+            w={200}
+            allowDeselect={false}
+          />
+        }
         enableRowSelection
         getRowId={(row) => row.user_id}
         renderBulkActions={(selected, clear) => (

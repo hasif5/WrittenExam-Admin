@@ -5,8 +5,8 @@
 // operations by passing enableRowSelection + renderBulkActions (no per-page plumbing).
 // Author: Hasif Ahmed (www.hasif.info)
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { Button, Collapse, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import {
   MantineReactTable,
@@ -16,7 +16,7 @@ import {
   type MRT_RowData,
   type MRT_RowSelectionState,
 } from "mantine-react-table";
-import { IconSearch } from "@tabler/icons-react";
+import { IconFilter, IconSearch } from "@tabler/icons-react";
 import { errorMessage } from "@/lib/errors";
 import classes from "./DataTable.module.css";
 
@@ -81,14 +81,19 @@ export function DataTable<T extends MRT_RowData>({
   renderBulkActions,
 }: DataTableProps<T>) {
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const resolveId = getRowId ?? ((row: T) => String((row as { id?: unknown }).id));
-  const clearSelection = () => setRowSelection({});
+  const clearSelection = useCallback(() => {
+    setRowSelection((current) =>
+      Object.keys(current).length > 0 ? {} : current,
+    );
+  }, []);
 
   // Server-side pagination/filtering returns a fresh page of rows, so a stale
   // selection from another page can no longer be resolved - clear it on change.
   useEffect(() => {
     clearSelection();
-  }, [pagination.pageIndex, pagination.pageSize, globalFilter]);
+  }, [clearSelection, pagination.pageIndex, pagination.pageSize, globalFilter]);
 
   const selectedRows =
     enableRowSelection && renderBulkActions
@@ -102,6 +107,35 @@ export function DataTable<T extends MRT_RowData>({
     enableGlobalFilter ||
     (enableRowSelection && Boolean(renderBulkActions));
   const isMobile = useMediaQuery("(max-width: 48em)");
+  const hasQueryControls = Boolean(filters) || enableGlobalFilter;
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileFiltersOpen(false);
+    }
+  }, [isMobile]);
+
+  const queryControls = (
+    <Group
+      gap="sm"
+      wrap="wrap"
+      align="center"
+      justify={isMobile ? "flex-start" : "flex-end"}
+      style={{ width: "100%" }}
+    >
+      {filters}
+      {enableGlobalFilter ? (
+        <TextInput
+          aria-label={searchPlaceholder ?? "Search table"}
+          placeholder={searchPlaceholder ?? "Search"}
+          leftSection={<IconSearch size={16} />}
+          value={globalFilter ?? ""}
+          onChange={(event) => onGlobalFilterChange?.(event.currentTarget.value)}
+          style={{ minWidth: isMobile ? "100%" : 230 }}
+        />
+      ) : null}
+    </Group>
+  );
 
   const table = useMantineReactTable<T>({
     columns,
@@ -196,20 +230,23 @@ export function DataTable<T extends MRT_RowData>({
                 ) : null}
               </Group>
             ) : null}
-            {filters || enableGlobalFilter ? (
-              <Group gap="sm" wrap="wrap" align="center">
-                {filters}
-                {enableGlobalFilter ? (
-                  <TextInput
-                    aria-label={searchPlaceholder ?? "Search table"}
-                    placeholder={searchPlaceholder ?? "Search"}
-                    leftSection={<IconSearch size={16} />}
-                    value={globalFilter ?? ""}
-                    onChange={(event) => onGlobalFilterChange?.(event.currentTarget.value)}
-                    style={{ minWidth: isMobile ? 210 : 230 }}
-                  />
-                ) : null}
-              </Group>
+            {hasQueryControls && isMobile ? (
+              <Stack gap="xs">
+                <Button
+                  variant="light"
+                  size="sm"
+                  leftSection={<IconFilter size={16} />}
+                  onClick={() => setMobileFiltersOpen((open) => !open)}
+                  aria-expanded={mobileFiltersOpen}
+                >
+                  Filters
+                </Button>
+                <Collapse in={mobileFiltersOpen}>
+                  {mobileFiltersOpen ? queryControls : null}
+                </Collapse>
+              </Stack>
+            ) : hasQueryControls ? (
+              queryControls
             ) : null}
           </Stack>
         )
